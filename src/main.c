@@ -63,6 +63,13 @@ static void draw_border(ms_t* ms) {
     mvaddch(ms->h + 1, ms->w + 1, '+');
 }
 
+/* init_grid: initializes the empty background grid for the ms struct */
+static void init_grid(ms_t* ms) {
+    for (int y = 0; y < ms->h; y++)
+        for (int x = 0; x < ms->w; x++)
+            ms->grid[y * ms->w + x] = BACK_CH;
+}
+
 /* redraw_grid: redraws the grid based on the ms.grid array */
 static void redraw_grid(ms_t* ms) {
     draw_border(ms);
@@ -91,6 +98,27 @@ static void generate_grid(ms_t* ms, point_t start, int total_bombs) {
 
         ms->grid[bomb_y * ms->w + bomb_x] = BOMB_CH;
     }
+}
+
+/* print_message: prints the specified message 2 lines bellow ms's grid */
+static void print_message(ms_t* ms, const char* str) {
+    int y, x;
+    getyx(stdscr, y, x);
+
+    mvprintw(ms->h + 3, 1, "%s", str);
+
+    move(y, x);
+}
+
+/* clear_line: clears a line in the screen */
+static inline void clear_line(int y) {
+    int oy, ox;
+    getyx(stdscr, oy, ox);
+
+    move(y, 0);
+    clrtoeol();
+
+    move(oy, ox);
 }
 
 int main(int argc, char** argv) {
@@ -159,9 +187,7 @@ int main(int argc, char** argv) {
 
     /* Allocate and initialize grid */
     ms.grid = malloc(ms.w * ms.h);
-    for (int y = 0; y < ms.h; y++)
-        for (int x = 0; x < ms.w; x++)
-            ms.grid[y * ms.w + x] = BACK_CH;
+    init_grid(&ms);
 
     redraw_grid(&ms);
 
@@ -182,6 +208,9 @@ int main(int argc, char** argv) {
 
         /* Wait for user input */
         c = tolower(getch());
+
+        /* Clear the output line */
+        clear_line(ms.h + 3);
 
         /* Parse input. 'q' quits and there is vim-like navigation */
         switch (c) {
@@ -206,7 +235,13 @@ int main(int argc, char** argv) {
                     cursor.x++;
                 break;
             case 'f':
+                if (!ms.playing) {
+                    print_message(&ms, "Can't flag a cell before revealing!");
+                    break;
+                }
+
                 /*TODO*/
+
                 break;
             case ' ':
                 if (!ms.playing) {
