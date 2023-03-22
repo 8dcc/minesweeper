@@ -1,6 +1,6 @@
 
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -Wextra
 LDFLAGS=-lncurses
 
 OBJS=obj/main.c.o
@@ -8,10 +8,16 @@ BIN=minesweeper.out
 
 .PHONY: clean all run
 
+# -------------------------------------------
+
 all: $(BIN)
 
 run: $(BIN)
 	./$<
+
+clean:
+	rm -f $(OBJS)
+	rm -f $(BIN)
 
 # -------------------------------------------
 
@@ -21,10 +27,4 @@ $(BIN): $(OBJS)
 $(OBJS): obj/%.c.o : src/%.c
 	@mkdir -p obj/
 	$(CC) $(CFLAGS) -c -o $@ $< $(LDFLAGS)
-
-# -------------------------------------------
-
-clean:
-	rm -f $(OBJS)
-	rm -f $(BIN)
 
