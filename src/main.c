@@ -9,14 +9,14 @@
 #include "defines.h"
 
 typedef struct {
-    uint16_t w;    /* Minesweeper width */
-    uint16_t h;    /* Minesweeper height */
-    uint8_t* grid; /* Pointer to the minesweeper grid */
+    uint16_t w; /* Minesweeper width */
+    uint16_t h; /* Minesweeper height */
+    char* grid; /* Pointer to the minesweeper grid */
 } ms_t;
 
 /* parse_resolution: parses a resolution string with format "WIDTHxHEIGHT" using
  * atoi. Saves integers in dst_w and dst_h */
-void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
+static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
     *dst_w = 0;
     *dst_h = 0;
 
@@ -33,6 +33,31 @@ void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
 
     *dst_w = atoi(start);
     *dst_h = atoi(src);
+}
+
+/* draw_border: draws the grid border for the ms */
+static void draw_border(ms_t* ms) {
+    /* First line */
+    mvaddch(0, 0, '+');
+    for (int x = 0; x < ms->w; x++)
+        mvaddch(0, x + 1, '-');
+    mvaddch(0, ms->w + 1, '+');
+
+    /* Mid lines */
+    for (int y = 1; y <= ms->h; y++) {
+        mvaddch(y, 0, '|');
+        mvaddch(y, ms->w + 1, '|');
+    }
+
+    /* Last line */
+    mvaddch(ms->h + 1, 0, '+');
+    for (int x = 0; x < ms->w; x++)
+        mvaddch(ms->h + 1, x + 1, '-');
+    mvaddch(ms->h + 1, ms->w + 1, '+');
+}
+
+static void generate_grid(ms_t* ms) {
+    /* TODO: */
 }
 
 int main(int argc, char** argv) {
@@ -54,8 +79,9 @@ int main(int argc, char** argv) {
 
             i++;
             parse_resolution(&ms.w, &ms.h, argv[i]);
-            if (ms.w == 0 || ms.h == 0) {
-                fprintf(stderr, "Invalid format for \"%s\"\n", argv[i - 1]);
+            if (ms.w <= 2 || ms.h <= 2) {
+                fprintf(stderr, "Invalid resolution format for \"%s\"\n",
+                        argv[i - 1]);
                 arg_error = true;
                 break;
             }
@@ -83,11 +109,13 @@ int main(int argc, char** argv) {
     noecho();             /* Don't print when typing */
     keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
 
+    draw_border(&ms);
+
     /* Char the user is pressing */
     int c = 0;
     do {
         /* TODO: Do stuff */
-        mvprintw(0, 0, "Resolution: %dx%d | Char: %c", ms.w, ms.h, c);
+        mvprintw(1, 1, "Resolution: %dx%d | Char: %c", ms.w, ms.h, c);
 
         /* Wait for user input */
         c = tolower(getch());
