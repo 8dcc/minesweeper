@@ -7,7 +7,10 @@
 #define MIN_W     10
 #define MIN_H     10
 
+#define DEFAULT_BOMB_PERCENT 10 /* % */
+
 #define BACK_CH '.'
+#define BOMB_CH '@'
 
 /* Special keys */
 #define KEY_UARROW 259

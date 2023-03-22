@@ -3,15 +3,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>  /* time */
 #include <ctype.h> /* tolower */
 #include <ncurses.h>
 
 #include "defines.h"
 
 typedef struct {
-    uint16_t w; /* Minesweeper width */
-    uint16_t h; /* Minesweeper height */
-    char* grid; /* Pointer to the minesweeper grid */
+    uint16_t w;   /* Minesweeper width */
+    uint16_t h;   /* Minesweeper height */
+    char* grid;   /* Pointer to the minesweeper grid */
+    bool playing; /* The user revealed the first cell */
 } ms_t;
 
 typedef struct {
@@ -72,8 +74,23 @@ static void redraw_grid(ms_t* ms) {
 
 /* generate_grid: generate a random bomb grid with an empty space from the first
  * user selection */
-static void generate_grid(ms_t* ms, point_t start) {
-    /*TODO*/
+static void generate_grid(ms_t* ms, point_t start, int total_bombs) {
+    for (int bombs = 0; bombs < total_bombs; bombs++) {
+        int bomb_y = rand() % ms->h;
+        int bomb_x = rand() % ms->w;
+        /* printf("%dx%d\n", bomb_y, bomb_x); */
+
+        /* Leave an empty zone arround cursor */
+        if (bomb_y > start.y - ((MIN_H - 4) / 2) &&
+            bomb_y < start.y + ((MIN_H - 4) / 2) &&
+            bomb_x > start.x - ((MIN_W - 4) / 2) &&
+            bomb_x < start.x + ((MIN_W - 4) / 2)) {
+            bombs--;
+            continue;
+        }
+
+        ms->grid[bomb_y * ms->w + bomb_x] = BOMB_CH;
+    }
 }
 
 int main(int argc, char** argv) {
@@ -82,6 +99,7 @@ int main(int argc, char** argv) {
         DEFAULT_W,
         DEFAULT_H,
         NULL,
+        false,
     };
 
     /* Parse arguments before ncurses */
@@ -104,6 +122,13 @@ int main(int argc, char** argv) {
                 arg_error = true;
                 break;
             }
+        } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keys")) {
+            printf("Controls:\n"
+                   "  <arrows> - Move in the grid\n"
+                   "      hjkl - Move in the grid (vim-like)\n"
+                   "         f - Flag bomb\n"
+                   "   <space> - Reveal cell\n");
+            return 0;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
             arg_error = true;
             break;
@@ -116,10 +141,12 @@ int main(int argc, char** argv) {
                 "    %s                   - Launch with default resolution\n"
                 "    %s --help            - Show this help\n"
                 "    %s -h                - Same as --help\n"
+                "    %s --keys            - Show the controls\n"
+                "    %s -k                - Same as --keys\n"
                 "    %s --resolution WxH  - Launch with specified resolution "
                 "(width, height)\n"
                 "    %s -r WxH            - Same as --resolution\n",
-                argv[0], argv[0], argv[0], argv[0], argv[0]);
+                argv[0], argv[0], argv[0], argv[0], argv[0], argv[0], argv[0]);
         return 1;
     }
 
@@ -127,6 +154,8 @@ int main(int argc, char** argv) {
     raw();                /* Scan input without pressing enter */
     noecho();             /* Don't print when typing */
     keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
+
+    srand(time(NULL)); /* Init random seed */
 
     /* Allocate and initialize grid */
     ms.grid = malloc(ms.w * ms.h);
@@ -175,6 +204,18 @@ int main(int argc, char** argv) {
             case KEY_RARROW:
                 if (cursor.x < ms.w - 1)
                     cursor.x++;
+                break;
+            case 'f':
+                /*TODO*/
+                break;
+            case ' ':
+                if (!ms.playing) {
+                    generate_grid(&ms, cursor,
+                                  ms.w * ms.h * DEFAULT_BOMB_PERCENT / 100);
+                    ms.playing = true;
+                    break;
+                }
+
                 break;
             case KEY_CTRLC:
                 c = 'q';
