@@ -14,6 +14,11 @@ typedef struct {
     char* grid; /* Pointer to the minesweeper grid */
 } ms_t;
 
+typedef struct {
+    uint16_t y;
+    uint16_t x;
+} point_t;
+
 /* parse_resolution: parses a resolution string with format "WIDTHxHEIGHT" using
  * atoi. Saves integers in dst_w and dst_h */
 static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
@@ -56,8 +61,19 @@ static void draw_border(ms_t* ms) {
     mvaddch(ms->h + 1, ms->w + 1, '+');
 }
 
-static void generate_grid(ms_t* ms) {
-    /* TODO: */
+/* redraw_grid: redraws the grid based on the ms.grid array */
+static void redraw_grid(ms_t* ms) {
+    draw_border(ms);
+
+    for (int y = 0; y < ms->h; y++)
+        for (int x = 0; x < ms->w; x++)
+            mvaddch(y + 1, x + 1, ms->grid[y * ms->w + x]);
+}
+
+/* generate_grid: generate a random bomb grid with an empty space from the first
+ * user selection */
+static void generate_grid(ms_t* ms, point_t start) {
+    /*TODO*/
 }
 
 int main(int argc, char** argv) {
@@ -79,9 +95,11 @@ int main(int argc, char** argv) {
 
             i++;
             parse_resolution(&ms.w, &ms.h, argv[i]);
-            if (ms.w <= 2 || ms.h <= 2) {
-                fprintf(stderr, "Invalid resolution format for \"%s\"\n",
-                        argv[i - 1]);
+            if (ms.w < MIN_W || ms.h < MIN_H) {
+                fprintf(stderr,
+                        "Invalid resolution format for \"%s\".\n"
+                        "Minimum resolution: %dx%d\n",
+                        argv[i - 1], MIN_W, MIN_H);
                 arg_error = true;
                 break;
             }
@@ -109,7 +127,13 @@ int main(int argc, char** argv) {
     noecho();             /* Don't print when typing */
     keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
 
-    draw_border(&ms);
+    /* Allocate and initialize grid */
+    ms.grid = malloc(ms.w * ms.h);
+    for (int y = 0; y < ms.h; y++)
+        for (int x = 0; x < ms.w; x++)
+            ms.grid[y * ms.w + x] = BACK_CH;
+
+    redraw_grid(&ms);
 
     /* Char the user is pressing */
     int c = 0;
@@ -147,6 +171,7 @@ int main(int argc, char** argv) {
         }
     } while (c != 'q');
 
+    free(ms.grid);
     endwin();
     return 0;
 }

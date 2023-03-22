@@ -4,6 +4,10 @@
 
 #define DEFAULT_W 50
 #define DEFAULT_H 20
+#define MIN_W     10
+#define MIN_H     10
+
+#define BACK_CH '.'
 
 /* Special keys */
 #define KEY_UARROW 259
