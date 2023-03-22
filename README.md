@@ -1,2 +1,2 @@
-# minesweeper
-CLI minesweeper made in C using ncurses
+## Minesweeper
+**CLI minesweeper made in C using ncurses.**
