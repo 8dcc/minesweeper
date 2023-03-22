@@ -77,6 +77,7 @@ static void generate_grid(ms_t* ms, point_t start) {
 }
 
 int main(int argc, char** argv) {
+    /* Main minesweeper struct */
     ms_t ms = (ms_t){
         DEFAULT_W,
         DEFAULT_H,
@@ -135,11 +136,20 @@ int main(int argc, char** argv) {
 
     redraw_grid(&ms);
 
+    /* User cursor in the grid, not the screen. Start at first cell */
+    point_t cursor = (point_t){ 0, 0 };
+
     /* Char the user is pressing */
     int c = 0;
     do {
-        /* TODO: Do stuff */
-        mvprintw(1, 1, "Resolution: %dx%d | Char: %c", ms.w, ms.h, c);
+        /* First, redraw the grid */
+        redraw_grid(&ms);
+
+        /* Update the cursor (+margins) */
+        move(cursor.y + 1, cursor.x + 1);
+
+        /* Refresh screen */
+        refresh();
 
         /* Wait for user input */
         c = tolower(getch());
@@ -148,19 +158,23 @@ int main(int argc, char** argv) {
         switch (c) {
             case 'k':
             case KEY_UARROW:
-                /* TODO: Directions */
+                if (cursor.y > 0)
+                    cursor.y--;
                 break;
             case 'j':
             case KEY_DARROW:
-                /* TODO: Directions */
+                if (cursor.y < ms.h - 1)
+                    cursor.y++;
                 break;
             case 'h':
             case KEY_LARROW:
-                /* TODO: Directions */
+                if (cursor.x > 0)
+                    cursor.x--;
                 break;
             case 'l':
             case KEY_RARROW:
-                /* TODO: Directions */
+                if (cursor.x < ms.w - 1)
+                    cursor.x++;
                 break;
             case KEY_CTRLC:
                 c = 'q';
