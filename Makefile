@@ -1,7 +1,7 @@
 
 CC=gcc
 CFLAGS=-Wall -Wextra
-LDFLAGS=-lncurses
+LDFLAGS=-lncurses -ltinfo
 
 OBJS=obj/main.c.o
 BIN=minesweeper.out
