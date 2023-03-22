@@ -2,6 +2,9 @@
 #ifndef _DEFINES_H
 #define _DEFINES_H 1
 
+#define DEFAULT_W 50
+#define DEFAULT_H 50
+
 /* Special keys */
 #define KEY_UARROW 259
 #define KEY_DARROW 258
