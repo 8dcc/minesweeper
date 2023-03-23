@@ -10,9 +10,14 @@
 #include "defines.h"
 
 typedef struct {
+    char c;        /* Char in that cell, actual item */
+    uint8_t flags; /* Cell status (revealed, flaged, etc) */
+} cell_t;
+
+typedef struct {
     uint16_t w;   /* Minesweeper width */
     uint16_t h;   /* Minesweeper height */
-    char* grid;   /* Pointer to the minesweeper grid */
+    cell_t* grid; /* Pointer to the minesweeper grid */
     bool playing; /* The user revealed the first cell */
 } ms_t;
 
@@ -65,18 +70,48 @@ static void draw_border(ms_t* ms) {
 
 /* init_grid: initializes the empty background grid for the ms struct */
 static void init_grid(ms_t* ms) {
-    for (int y = 0; y < ms->h; y++)
-        for (int x = 0; x < ms->w; x++)
-            ms->grid[y * ms->w + x] = BACK_CH;
+    for (int y = 0; y < ms->h; y++) {
+        for (int x = 0; x < ms->w; x++) {
+            ms->grid[y * ms->w + x].c     = BACK_CH;
+            ms->grid[y * ms->w + x].flags = FLAG_NONE;
+        }
+    }
+}
+
+/* get_bombs: returns the number of bombs surrounding a specified cell */
+static int get_bombs(ms_t* ms, int fy, int fx) {
+    int ret = 0;
+
+    /* ###
+     * #X#
+     * ### */
+    for (int y = fy - 1; y <= fy + 1; y++)
+        for (int x = fx - 1; x <= fx + 1; x++)
+            if (ms->grid[y * ms->w + x].c == BOMB_CH)
+                ret++;
+
+    return ret;
 }
 
 /* redraw_grid: redraws the grid based on the ms.grid array */
 static void redraw_grid(ms_t* ms) {
     draw_border(ms);
 
-    for (int y = 0; y < ms->h; y++)
-        for (int x = 0; x < ms->w; x++)
-            mvaddch(y + 1, x + 1, ms->grid[y * ms->w + x]);
+    for (int y = 0; y < ms->h; y++) {
+        for (int x = 0; x < ms->w; x++) {
+            if (ms->grid[y * ms->w + x].flags & FLAG_CLEARED) {
+                const int bombs = get_bombs(ms, y, x);
+                if (bombs && ms->grid[y * ms->w + x].c != BOMB_CH)
+                    /* Number */
+                    mvaddch(y + 1, x + 1, bombs + '0');
+                else
+                    /* Empty or bomb (we lost) */
+                    mvaddch(y + 1, x + 1, ms->grid[y * ms->w + x].c);
+            } else {
+                mvaddch(y + 1, x + 1, UNKN_CH);
+            }
+        }
+    }
 }
 
 /* generate_grid: generate a random bomb grid with an empty space from the first
@@ -96,7 +131,7 @@ static void generate_grid(ms_t* ms, point_t start, int total_bombs) {
             continue;
         }
 
-        ms->grid[bomb_y * ms->w + bomb_x] = BOMB_CH;
+        ms->grid[bomb_y * ms->w + bomb_x].c = BOMB_CH;
     }
 }
 
@@ -119,6 +154,33 @@ static inline void clear_line(int y) {
     clrtoeol();
 
     move(oy, ox);
+}
+
+/* reveal_cells: reveals the needed cells using recursion, based on y and x */
+static void reveal_cells(ms_t* ms, int fy, int fx) {
+    if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
+        /* TODO */
+        print_message(ms, "lost");
+        ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
+        return;
+    }
+
+    /* TODO: FIXME */
+    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARING;
+
+    if (!get_bombs(ms, fy, fx)) {
+        /* No bombs, reveal surrounding cells
+         * ###
+         * #X#
+         * ### */
+        for (int y = fy - 1; y <= fy + 1; y++)
+            for (int x = fx - 1; x <= fx + 1; x++)
+                /* Not the best way */
+                if (ms->grid[y * ms->w + x].flags & FLAG_CLEARING)
+                    reveal_cells(ms, y, x);
+    }
+
+    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
 }
 
 int main(int argc, char** argv) {
@@ -183,10 +245,10 @@ int main(int argc, char** argv) {
     noecho();             /* Don't print when typing */
     keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
 
-    srand(time(NULL)); /* Init random seed */
+    srand(time(NULL));    /* Init random seed */
 
     /* Allocate and initialize grid */
-    ms.grid = malloc(ms.w * ms.h);
+    ms.grid = malloc(ms.w * ms.h * sizeof(cell_t));
     init_grid(&ms);
 
     redraw_grid(&ms);
@@ -248,8 +310,14 @@ int main(int argc, char** argv) {
                     generate_grid(&ms, cursor,
                                   ms.w * ms.h * DEFAULT_BOMB_PERCENT / 100);
                     ms.playing = true;
-                    break;
                 }
+
+                /* reveal_cells(&ms, cursor.y, cursor.x); */
+
+                /* DELME */
+                for (int y = 0; y < ms.h; y++)
+                    for (int x = 0; x < ms.w; x++)
+                        ms.grid[y * ms.w + x].flags |= FLAG_CLEARED;
 
                 break;
             case KEY_CTRLC:
