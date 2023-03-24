@@ -88,8 +88,8 @@ static int get_bombs(ms_t* ms, int fy, int fx) {
     /* ###
      * #X#
      * ### */
-    for (int y = fy - 1; y <= fy + 1; y++)
-        for (int x = fx - 1; x <= fx + 1; x++)
+    for (int y = (fy > 0) ? fy - 1 : fy; y <= fy + 1 && y < ms->h; y++)
+        for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
             if (ms->grid[y * ms->w + x].c == BOMB_CH)
                 ret++;
 
