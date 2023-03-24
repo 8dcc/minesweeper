@@ -15,10 +15,10 @@ typedef struct {
 } cell_t;
 
 typedef struct {
-    uint16_t w;   /* Minesweeper width */
-    uint16_t h;   /* Minesweeper height */
-    cell_t* grid; /* Pointer to the minesweeper grid */
-    bool playing; /* The user revealed the first cell */
+    uint16_t w;      /* Minesweeper width */
+    uint16_t h;      /* Minesweeper height */
+    cell_t* grid;    /* Pointer to the minesweeper grid */
+    uint8_t playing; /* The user revealed the first cell */
 } ms_t;
 
 typedef struct {
@@ -161,7 +161,7 @@ static void reveal_cells(ms_t* ms, int fy, int fx) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
         print_message(ms, "You lost. Press any key to restart.");
         ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
-        ms->playing = false;
+        ms->playing = PLAYING_FALSE;
         return;
     }
 
@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
         .w       = DEFAULT_W,
         .h       = DEFAULT_H,
         .grid    = NULL,
-        .playing = false,
+        .playing = PLAYING_FALSE,
     };
 
     /* Parse arguments before ncurses */
@@ -247,6 +247,7 @@ int main(int argc, char** argv) {
     /* Allocate and initialize grid */
     ms.grid = malloc(ms.w * ms.h * sizeof(cell_t));
     init_grid(&ms);
+    ms.playing = PLAYING_CLEAR;
 
     redraw_grid(&ms);
 
@@ -271,6 +272,13 @@ int main(int argc, char** argv) {
         /* Clear the output line */
         clear_line(ms.h + 3);
 
+        /* If it's the first iteration on a new game, clear grid. We will only
+         * generate the bombs once we press space the first time */
+        if (ms.playing == PLAYING_FALSE) {
+            init_grid(&ms);
+            ms.playing = PLAYING_CLEAR;
+        }
+
         /* Parse input. 'q' quits and there is vim-like navigation */
         switch (c) {
             case 'k':
@@ -294,7 +302,8 @@ int main(int argc, char** argv) {
                     cursor.x++;
                 break;
             case 'f':
-                if (!ms.playing) {
+                /* If we just started playing, but we don't have the bombs */
+                if (ms.playing == PLAYING_CLEAR) {
                     print_message(&ms, "Can't flag a cell before revealing!");
                     break;
                 }
@@ -303,8 +312,7 @@ int main(int argc, char** argv) {
 
                 break;
             case ' ':
-                if (!ms.playing) {
-                    init_grid(&ms);
+                if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(&ms, cursor,
                                   ms.w * ms.h * DEFAULT_BOMB_PERCENT / 100);
                     ms.playing = true;
