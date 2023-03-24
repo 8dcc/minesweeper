@@ -159,37 +159,34 @@ static inline void clear_line(int y) {
 /* reveal_cells: reveals the needed cells using recursion, based on y and x */
 static void reveal_cells(ms_t* ms, int fy, int fx) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
-        /* TODO */
-        print_message(ms, "lost");
+        print_message(ms, "You lost. Press any key to restart.");
         ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
+        ms->playing = false;
         return;
     }
 
-    /* TODO: FIXME */
-    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARING;
+    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
 
     if (!get_bombs(ms, fy, fx)) {
         /* No bombs, reveal surrounding cells
          * ###
          * #X#
          * ### */
-        for (int y = fy - 1; y <= fy + 1; y++)
-            for (int x = fx - 1; x <= fx + 1; x++)
-                /* Not the best way */
-                if (ms->grid[y * ms->w + x].flags & FLAG_CLEARING)
+        for (int y = (fy > 0) ? fy - 1 : fy; y <= fy + 1 && y < ms->h; y++)
+            for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
+                /* If we are not revealing that one, reveal */
+                if (!(ms->grid[y * ms->w + x].flags & FLAG_CLEARED))
                     reveal_cells(ms, y, x);
     }
-
-    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
 }
 
 int main(int argc, char** argv) {
     /* Main minesweeper struct */
     ms_t ms = (ms_t){
-        DEFAULT_W,
-        DEFAULT_H,
-        NULL,
-        false,
+        .w       = DEFAULT_W,
+        .h       = DEFAULT_H,
+        .grid    = NULL,
+        .playing = false,
     };
 
     /* Parse arguments before ncurses */
@@ -245,7 +242,7 @@ int main(int argc, char** argv) {
     noecho();             /* Don't print when typing */
     keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
 
-    srand(time(NULL));    /* Init random seed */
+    srand(time(NULL)); /* Init random seed */
 
     /* Allocate and initialize grid */
     ms.grid = malloc(ms.w * ms.h * sizeof(cell_t));
@@ -307,18 +304,13 @@ int main(int argc, char** argv) {
                 break;
             case ' ':
                 if (!ms.playing) {
+                    init_grid(&ms);
                     generate_grid(&ms, cursor,
                                   ms.w * ms.h * DEFAULT_BOMB_PERCENT / 100);
                     ms.playing = true;
                 }
 
-                /* reveal_cells(&ms, cursor.y, cursor.x); */
-
-                /* DELME */
-                for (int y = 0; y < ms.h; y++)
-                    for (int x = 0; x < ms.w; x++)
-                        ms.grid[y * ms.w + x].flags |= FLAG_CLEARED;
-
+                reveal_cells(&ms, cursor.y, cursor.x);
                 break;
             case KEY_CTRLC:
                 c = 'q';

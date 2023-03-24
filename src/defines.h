@@ -13,7 +13,6 @@ enum cell_flags {
     FLAG_NONE     = 0x0, /* 0000 */
     FLAG_CLEARED  = 0x1, /* 0001 */
     FLAG_FLAGGED  = 0x2, /* 0010 */
-    FLAG_CLEARING = 0x4, /* 0100 */
 };
 
 #define UNKN_CH '.'
