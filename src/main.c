@@ -50,6 +50,78 @@ static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
     *dst_h = atoi(src);
 }
 
+static bool parse_args(int argc, char** argv, ms_t* ms) {
+    bool arg_error = false;
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--resolution")) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Not enough arguments for \"%s\"\n", argv[i]);
+                arg_error = true;
+                break;
+            }
+
+            i++;
+            parse_resolution(&ms->w, &ms->h, argv[i]);
+            if (ms->w < MIN_W || ms->h < MIN_H) {
+                fprintf(stderr,
+                        "Invalid resolution format for \"%s\".\n"
+                        "Minimum resolution: %dx%d\n",
+                        argv[i - 1], MIN_W, MIN_H);
+                arg_error = true;
+                break;
+            }
+        } else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--difficulty")) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Not enough arguments for \"%s\"\n", argv[i]);
+                arg_error = true;
+                break;
+            }
+
+            ms->difficulty = atoi(argv[++i]);
+            if (ms->difficulty < 1 || ms->difficulty > 100) {
+                fprintf(stderr,
+                        "Invalid difficulty format for \"%s\".\n"
+                        "Difficulty range: 1-100\n",
+                        argv[i - 1]);
+                arg_error = true;
+                break;
+            }
+        } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keys")) {
+            printf("Controls:\n"
+                   "  <arrows> - Move in the grid\n"
+                   "      hjkl - Move in the grid (vim-like)\n"
+                   "         f - Flag bomb\n"
+                   "   <space> - Reveal tile\n"
+                   "         r - Reveal all tiles and end game\n");
+            return 0;
+        } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
+            arg_error = true;
+            break;
+        }
+    }
+
+    if (arg_error) {
+        fprintf(stderr,
+                "Usage:\n"
+                "    %s                   - Launch with default resolution\n"
+                "    %s --help            - Show this help\n"
+                "    %s -h                - Same as --help\n"
+                "    %s --keys            - Show the controls\n"
+                "    %s -k                - Same as --keys\n"
+                "    %s --resolution WxH  - Launch with specified resolution "
+                "(width, height)\n"
+                "    %s -r WxH            - Same as --resolution\n"
+                "    %s --difficulty N    - Use specified difficulty from 1 to "
+                "100. Default: 40\n"
+                "    %s -d N              - Same as --difficulty\n",
+                argv[0], argv[0], argv[0], argv[0], argv[0], argv[0], argv[0],
+                argv[0], argv[0]);
+        return false;
+    }
+
+    return true;
+}
+
 /* draw_border: draws the grid border for the ms */
 static void draw_border(ms_t* ms) {
     /* First line */
@@ -211,74 +283,8 @@ int main(int argc, char** argv) {
     };
 
     /* Parse arguments before ncurses */
-    /* TODO: Move to func */
-    bool arg_error = false;
-    for (int i = 1; i < argc; i++) {
-        if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--resolution")) {
-            if (i == argc - 1) {
-                fprintf(stderr, "Not enough arguments for \"%s\"\n", argv[i]);
-                arg_error = true;
-                break;
-            }
-
-            i++;
-            parse_resolution(&ms.w, &ms.h, argv[i]);
-            if (ms.w < MIN_W || ms.h < MIN_H) {
-                fprintf(stderr,
-                        "Invalid resolution format for \"%s\".\n"
-                        "Minimum resolution: %dx%d\n",
-                        argv[i - 1], MIN_W, MIN_H);
-                arg_error = true;
-                break;
-            }
-        } else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--difficulty")) {
-            if (i == argc - 1) {
-                fprintf(stderr, "Not enough arguments for \"%s\"\n", argv[i]);
-                arg_error = true;
-                break;
-            }
-
-            ms.difficulty = atoi(argv[++i]);
-            if (ms.difficulty < 1 || ms.difficulty > 100) {
-                fprintf(stderr,
-                        "Invalid difficulty format for \"%s\".\n"
-                        "Difficulty range: 1-100\n",
-                        argv[i - 1]);
-                arg_error = true;
-                break;
-            }
-        } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keys")) {
-            printf("Controls:\n"
-                   "  <arrows> - Move in the grid\n"
-                   "      hjkl - Move in the grid (vim-like)\n"
-                   "         f - Flag bomb\n"
-                   "   <space> - Reveal tile\n"
-                   "         r - Reveal all tiles and end game\n");
-            return 0;
-        } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
-            arg_error = true;
-            break;
-        }
-    }
-
-    if (arg_error) {
-        fprintf(stderr,
-                "Usage:\n"
-                "    %s                   - Launch with default resolution\n"
-                "    %s --help            - Show this help\n"
-                "    %s -h                - Same as --help\n"
-                "    %s --keys            - Show the controls\n"
-                "    %s -k                - Same as --keys\n"
-                "    %s --resolution WxH  - Launch with specified resolution "
-                "(width, height)\n"
-                "    %s -r WxH            - Same as --resolution\n"
-                "    %s --difficulty N    - Use specified difficulty from 1 to "
-                "100. Default: 40\n"
-                "    %s -d N              - Same as --difficulty\n",
-                argv[0], argv[0], argv[0], argv[0], argv[0], argv[0], argv[0],
-                argv[0], argv[0]);
+    if (!parse_args(argc, argv, &ms))
         return 1;
-    }
 
     initscr();            /* Init ncurses */
     raw();                /* Scan input without pressing enter */
