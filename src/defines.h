@@ -7,9 +7,9 @@
 #define MIN_W     10
 #define MIN_H     10
 
-#define DEFAULT_DIFFICULTY 40 /* 1-100% */
+#define DEFAULT_DIFFICULTY 30 /* 1-100% */
 #define MIN_BOMBS 5
-#define MAX_BOMBS 70
+#define MAX_BOMBS 60
 
 /* For cell_t.flags */
 enum cell_flags {

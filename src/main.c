@@ -252,7 +252,8 @@ int main(int argc, char** argv) {
                    "  <arrows> - Move in the grid\n"
                    "      hjkl - Move in the grid (vim-like)\n"
                    "         f - Flag bomb\n"
-                   "   <space> - Reveal cell\n");
+                   "   <space> - Reveal tile\n"
+                   "         r - Reveal all tiles and end game\n");
             return 0;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
             arg_error = true;
@@ -354,13 +355,31 @@ int main(int argc, char** argv) {
 
                 break;
             case ' ':
+                /* Initialize the bombs once we reveal for the first time */
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(&ms, cursor,
                                   DIFFIC2BOMBPERCENT(ms.difficulty));
-                    ms.playing = true;
+                    ms.playing = PLAYING_TRUE;
                 }
 
                 reveal_cells(&ms, cursor.y, cursor.x);
+                break;
+            case 'r':
+                /* Generate if it's the first time playing */
+                if (ms.playing == PLAYING_CLEAR) {
+                    generate_grid(&ms, cursor,
+                                  DIFFIC2BOMBPERCENT(ms.difficulty));
+                    ms.playing = PLAYING_TRUE;
+                }
+
+                print_message(&ms, "Revealing all tiles and aborting game. "
+                                   "Press any key to continue.");
+
+                for (int y = 0; y < ms.h; y++)
+                    for (int x = 0; x < ms.w; x++)
+                        ms.grid[y * ms.w + x].flags |= FLAG_CLEARED;
+
+                ms.playing = PLAYING_FALSE;
                 break;
             case KEY_CTRLC:
                 c = 'q';
