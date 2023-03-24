@@ -7,7 +7,9 @@
 #define MIN_W     10
 #define MIN_H     10
 
-#define DEFAULT_BOMB_PERCENT 20 /* % */
+#define DEFAULT_DIFFICULTY 40 /* 1-100% */
+#define MIN_BOMBS 5
+#define MAX_BOMBS 70
 
 /* For cell_t.flags */
 enum cell_flags {
@@ -26,6 +28,7 @@ enum playing_flags {
 #define UNKN_CH '.'
 #define BACK_CH ' '
 #define BOMB_CH '@'
+#define FLAG_CH 'F'
 
 /* Special keys */
 #define KEY_UARROW 259

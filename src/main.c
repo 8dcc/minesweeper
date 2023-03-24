@@ -9,16 +9,19 @@
 
 #include "defines.h"
 
+#define DIFFIC2BOMBPERCENT(d) ((MAX_BOMBS - MIN_BOMBS) * d / 100 + MIN_BOMBS)
+
 typedef struct {
     char c;        /* Char in that cell, actual item */
     uint8_t flags; /* Cell status (revealed, flaged, etc) */
 } cell_t;
 
 typedef struct {
-    uint16_t w;      /* Minesweeper width */
-    uint16_t h;      /* Minesweeper height */
-    cell_t* grid;    /* Pointer to the minesweeper grid */
-    uint8_t playing; /* The user revealed the first cell */
+    uint16_t w;         /* Minesweeper width */
+    uint16_t h;         /* Minesweeper height */
+    cell_t* grid;       /* Pointer to the minesweeper grid */
+    uint8_t playing;    /* The user revealed the first cell */
+    uint8_t difficulty; /* Percentage of bombs to fill in the grid */
 } ms_t;
 
 typedef struct {
@@ -107,6 +110,8 @@ static void redraw_grid(ms_t* ms) {
                 else
                     /* Empty or bomb (we lost) */
                     mvaddch(y + 1, x + 1, ms->grid[y * ms->w + x].c);
+            } else if (ms->grid[y * ms->w + x].flags & FLAG_FLAGGED) {
+                mvaddch(y + 1, x + 1, FLAG_CH);
             } else {
                 mvaddch(y + 1, x + 1, UNKN_CH);
             }
@@ -116,13 +121,28 @@ static void redraw_grid(ms_t* ms) {
 
 /* generate_grid: generate a random bomb grid with an empty space from the first
  * user selection */
-static void generate_grid(ms_t* ms, point_t start, int total_bombs) {
+static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
+    int total_bombs = ms->h * ms->w * bomb_percent / 100;
+
+    /* Actual tiles available for bombs (keep in mind the empty zone around the
+     * cursor) */
+    const int max_bombs = ms->w * ms->h - (MIN_H - 8) - (MIN_W - 8);
+    if (total_bombs > max_bombs) {
+#ifdef DEBUG
+        fprintf(stderr,
+                "generate_grid: Error. Can't generate %d bombs (%d%%) in grid "
+                "%dx%d.\n",
+                total_bombs, bomb_percent, ms->h, ms->w);
+        return;
+#endif
+        total_bombs = max_bombs;
+    }
+
     for (int bombs = 0; bombs < total_bombs; bombs++) {
         int bomb_y = rand() % ms->h;
         int bomb_x = rand() % ms->w;
-        /* printf("%dx%d\n", bomb_y, bomb_x); */
 
-        /* Leave an empty zone arround cursor */
+        /* Leave an empty zone around cursor */
         if (bomb_y > start.y - ((MIN_H - 4) / 2) &&
             bomb_y < start.y + ((MIN_H - 4) / 2) &&
             bomb_x > start.x - ((MIN_W - 4) / 2) &&
@@ -183,13 +203,15 @@ static void reveal_cells(ms_t* ms, int fy, int fx) {
 int main(int argc, char** argv) {
     /* Main minesweeper struct */
     ms_t ms = (ms_t){
-        .w       = DEFAULT_W,
-        .h       = DEFAULT_H,
-        .grid    = NULL,
-        .playing = PLAYING_FALSE,
+        .w          = DEFAULT_W,
+        .h          = DEFAULT_H,
+        .grid       = NULL,
+        .playing    = PLAYING_FALSE,
+        .difficulty = DEFAULT_DIFFICULTY,
     };
 
     /* Parse arguments before ncurses */
+    /* TODO: Move to func */
     bool arg_error = false;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--resolution")) {
@@ -206,6 +228,22 @@ int main(int argc, char** argv) {
                         "Invalid resolution format for \"%s\".\n"
                         "Minimum resolution: %dx%d\n",
                         argv[i - 1], MIN_W, MIN_H);
+                arg_error = true;
+                break;
+            }
+        } else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--difficulty")) {
+            if (i == argc - 1) {
+                fprintf(stderr, "Not enough arguments for \"%s\"\n", argv[i]);
+                arg_error = true;
+                break;
+            }
+
+            ms.difficulty = atoi(argv[++i]);
+            if (ms.difficulty < 1 || ms.difficulty > 100) {
+                fprintf(stderr,
+                        "Invalid difficulty format for \"%s\".\n"
+                        "Difficulty range: 1-100\n",
+                        argv[i - 1]);
                 arg_error = true;
                 break;
             }
@@ -232,8 +270,12 @@ int main(int argc, char** argv) {
                 "    %s -k                - Same as --keys\n"
                 "    %s --resolution WxH  - Launch with specified resolution "
                 "(width, height)\n"
-                "    %s -r WxH            - Same as --resolution\n",
-                argv[0], argv[0], argv[0], argv[0], argv[0], argv[0], argv[0]);
+                "    %s -r WxH            - Same as --resolution\n"
+                "    %s --difficulty N    - Use specified difficulty from 1 to "
+                "100. Default: 40\n"
+                "    %s -d N              - Same as --difficulty\n",
+                argv[0], argv[0], argv[0], argv[0], argv[0], argv[0], argv[0],
+                argv[0], argv[0]);
         return 1;
     }
 
@@ -308,13 +350,13 @@ int main(int argc, char** argv) {
                     break;
                 }
 
-                /*TODO*/
+                /* TODO */
 
                 break;
             case ' ':
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(&ms, cursor,
-                                  ms.w * ms.h * DEFAULT_BOMB_PERCENT / 100);
+                                  DIFFIC2BOMBPERCENT(ms.difficulty));
                     ms.playing = true;
                 }
 
