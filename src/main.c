@@ -12,15 +12,15 @@
 #define DIFFIC2BOMBPERCENT(d) ((MAX_BOMBS - MIN_BOMBS) * d / 100 + MIN_BOMBS)
 
 typedef struct {
-    char c;        /* Char in that cell, actual item */
-    uint8_t flags; /* Cell status (revealed, flaged, etc) */
-} cell_t;
+    char c;        /* Char in that tile, actual item */
+    uint8_t flags; /* Tile status (revealed, flaged, etc) */
+} tile_t;
 
 typedef struct {
     uint16_t w;         /* Minesweeper width */
     uint16_t h;         /* Minesweeper height */
-    cell_t* grid;       /* Pointer to the minesweeper grid */
-    uint8_t playing;    /* The user revealed the first cell */
+    tile_t* grid;       /* Pointer to the minesweeper grid */
+    uint8_t playing;    /* The user revealed the first tile */
     uint8_t difficulty; /* Percentage of bombs to fill in the grid */
 } ms_t;
 
@@ -81,7 +81,7 @@ static void init_grid(ms_t* ms) {
     }
 }
 
-/* get_bombs: returns the number of bombs surrounding a specified cell */
+/* get_bombs: returns the number of bombs surrounding a specified tile */
 static int get_bombs(ms_t* ms, int fy, int fx) {
     int ret = 0;
 
@@ -176,8 +176,8 @@ static inline void clear_line(int y) {
     move(oy, ox);
 }
 
-/* reveal_cells: reveals the needed cells using recursion, based on y and x */
-static void reveal_cells(ms_t* ms, int fy, int fx) {
+/* reveal_tiles: reveals the needed tiles using recursion, based on y and x */
+static void reveal_tiles(ms_t* ms, int fy, int fx) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
         print_message(ms, "You lost. Press any key to restart.");
         ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
@@ -188,7 +188,7 @@ static void reveal_cells(ms_t* ms, int fy, int fx) {
     ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
 
     if (!get_bombs(ms, fy, fx)) {
-        /* No bombs, reveal surrounding cells
+        /* No bombs, reveal surrounding tiles
          * ###
          * #X#
          * ### */
@@ -196,7 +196,7 @@ static void reveal_cells(ms_t* ms, int fy, int fx) {
             for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
                 /* If we are not revealing that one, reveal */
                 if (!(ms->grid[y * ms->w + x].flags & FLAG_CLEARED))
-                    reveal_cells(ms, y, x);
+                    reveal_tiles(ms, y, x);
     }
 }
 
@@ -288,13 +288,13 @@ int main(int argc, char** argv) {
     srand(time(NULL)); /* Init random seed */
 
     /* Allocate and initialize grid */
-    ms.grid = malloc(ms.w * ms.h * sizeof(cell_t));
+    ms.grid = malloc(ms.w * ms.h * sizeof(tile_t));
     init_grid(&ms);
     ms.playing = PLAYING_CLEAR;
 
     redraw_grid(&ms);
 
-    /* User cursor in the grid, not the screen. Start at first cell */
+    /* User cursor in the grid, not the screen. Start at first tile */
     point_t cursor = (point_t){ 0, 0 };
 
     /* Char the user is pressing */
@@ -347,7 +347,7 @@ int main(int argc, char** argv) {
             case 'f':
                 /* If we just started playing, but we don't have the bombs */
                 if (ms.playing == PLAYING_CLEAR) {
-                    print_message(&ms, "Can't flag a cell before revealing!");
+                    print_message(&ms, "Can't flag a tile before revealing!");
                     break;
                 }
 
@@ -362,7 +362,7 @@ int main(int argc, char** argv) {
                     ms.playing = PLAYING_TRUE;
                 }
 
-                reveal_cells(&ms, cursor.y, cursor.x);
+                reveal_tiles(&ms, cursor.y, cursor.x);
                 break;
             case 'r':
                 /* Generate if it's the first time playing */

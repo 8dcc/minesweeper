@@ -11,8 +11,8 @@
 #define MIN_BOMBS 5
 #define MAX_BOMBS 60
 
-/* For cell_t.flags */
-enum cell_flags {
+/* For tile_t.flags */
+enum tile_flags {
     FLAG_NONE    = 0x0, /* 0000 */
     FLAG_CLEARED = 0x1, /* 0001 */
     FLAG_FLAGGED = 0x2, /* 0010 */
