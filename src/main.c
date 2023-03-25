@@ -90,11 +90,11 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
             }
         } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keys")) {
             printf("Controls:\n"
-                   "  <arrows> - Move in the grid\n"
-                   "      hjkl - Move in the grid (vim-like)\n"
-                   "         f - Flag bomb\n"
-                   "   <space> - Reveal tile\n"
-                   "         r - Reveal all tiles and end game\n");
+                   "    <arrows> - Move in the grid\n"
+                   "        hjkl - Move in the grid (vim-like)\n"
+                   "           f - Flag bomb\n"
+                   "     <space> - Reveal tile\n"
+                   "           r - Reveal all tiles and end game\n");
             return 0;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
             arg_error = true;
