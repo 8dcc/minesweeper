@@ -322,9 +322,14 @@ int main(int argc, char** argv) {
     initscr();            /* Init ncurses */
     raw();                /* Scan input without pressing enter */
     noecho();             /* Don't print when typing */
-    keypad(stdscr, TRUE); /* Enable keypad (arrow keys) */
+    keypad(stdscr, true); /* Enable keypad (arrow keys) */
 
-    srand(time(NULL)); /* Init random seed */
+    /* Enable mouse support and declare ncurses mouse event */
+    mousemask(BUTTON1_PRESSED | BUTTON3_PRESSED, NULL);
+    MEVENT event;
+
+    /* Init random seed */
+    srand(time(NULL));
 
     /* Allocate and initialize grid */
     ms.grid = malloc(ms.w * ms.h * sizeof(tile_t));
@@ -364,26 +369,41 @@ int main(int argc, char** argv) {
         /* Parse input. 'q' quits and there is vim-like navigation */
         switch (c) {
             case 'k':
-            case KEY_UARROW:
+            case KEY_UP:
                 if (cursor.y > 0)
                     cursor.y--;
                 break;
             case 'j':
-            case KEY_DARROW:
+            case KEY_DOWN:
                 if (cursor.y < ms.h - 1)
                     cursor.y++;
                 break;
             case 'h':
-            case KEY_LARROW:
+            case KEY_LEFT:
                 if (cursor.x > 0)
                     cursor.x--;
                 break;
             case 'l':
-            case KEY_RARROW:
+            case KEY_RIGHT:
                 if (cursor.x < ms.w - 1)
                     cursor.x++;
                 break;
+            case KEY_MOUSE:
+                if (getmouse(&event) == OK) {
+                    const int border_sz = 1;
+                    if (event.bstate & BUTTON1_PRESSED) {
+                        cursor.y = event.y - border_sz;
+                        cursor.x = event.x - border_sz;
+                        goto clearTile;
+                    } else if (event.bstate & BUTTON3_PRESSED) {
+                        cursor.y = event.y - border_sz;
+                        cursor.x = event.x - border_sz;
+                        goto toggleFlag;
+                    }
+                }
+                break;
             case 'f':
+            toggleFlag:
                 /* If we just started playing, but we don't have the bombs */
                 if (ms.playing == PLAYING_CLEAR) {
                     print_message(&ms, "Can't flag a tile before starting the "
@@ -400,6 +420,7 @@ int main(int argc, char** argv) {
 
                 break;
             case ' ':
+            clearTile:
                 /* Initialize the bombs once we reveal for the first time */
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(&ms, cursor,
