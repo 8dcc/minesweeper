@@ -92,8 +92,10 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
             printf("Controls:\n"
                    "    <arrows> - Move in the grid\n"
                    "        hjkl - Move in the grid (vim-like)\n"
-                   "           f - Flag bomb\n"
                    "     <space> - Reveal tile\n"
+                   "    <LMouse> - Reveal clicked bomb\n"
+                   "           f - Flag bomb\n"
+                   "    <RMouse> - Flag clicked bomb\n"
                    "           r - Reveal all tiles and end game\n"
                    "           q - Quit the game\n");
             return 0;
