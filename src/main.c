@@ -50,7 +50,9 @@ static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
     *dst_h = atoi(src);
 }
 
-static bool parse_args(int argc, char** argv, ms_t* ms) {
+/* parse_args: parses the program arguments changing the properties of ms.
+ * Returns false if the caller needs to exit */
+static inline bool parse_args(int argc, char** argv, ms_t* ms) {
     bool arg_error = false;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--resolution")) {
@@ -168,24 +170,50 @@ static int get_bombs(ms_t* ms, int fy, int fx) {
     return ret;
 }
 
+/* print_message: prints the specified message 2 lines bellow ms's grid */
+static void print_message(ms_t* ms, const char* str) {
+    int y, x;
+    getyx(stdscr, y, x);
+
+    mvprintw(ms->h + 3, 1, "%s", str);
+
+    move(y, x);
+}
+
+/* clear_line: clears a line in the screen */
+static inline void clear_line(int y) {
+    int oy, ox;
+    getyx(stdscr, oy, ox);
+
+    move(y, 0);
+    clrtoeol();
+
+    move(oy, ox);
+}
+
 /* redraw_grid: redraws the grid based on the ms.grid array */
 static void redraw_grid(ms_t* ms) {
+    const int border_sz = 1;
+
     draw_border(ms);
 
     for (int y = 0; y < ms->h; y++) {
         for (int x = 0; x < ms->w; x++) {
+            const int final_y = y + border_sz;
+            const int final_x = x + border_sz;
+
             if (ms->grid[y * ms->w + x].flags & FLAG_CLEARED) {
                 const int bombs = get_bombs(ms, y, x);
                 if (bombs && ms->grid[y * ms->w + x].c != BOMB_CH)
                     /* Number */
-                    mvaddch(y + 1, x + 1, bombs + '0');
+                    mvaddch(final_y, final_x, bombs + '0');
                 else
                     /* Empty or bomb (we lost) */
-                    mvaddch(y + 1, x + 1, ms->grid[y * ms->w + x].c);
+                    mvaddch(final_y, final_x, ms->grid[y * ms->w + x].c);
             } else if (ms->grid[y * ms->w + x].flags & FLAG_FLAGGED) {
-                mvaddch(y + 1, x + 1, FLAG_CH);
+                mvaddch(final_y, final_x, FLAG_CH);
             } else {
-                mvaddch(y + 1, x + 1, UNKN_CH);
+                mvaddch(final_y, final_x, UNKN_CH);
             }
         }
     }
@@ -227,27 +255,6 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
     }
 }
 
-/* print_message: prints the specified message 2 lines bellow ms's grid */
-static void print_message(ms_t* ms, const char* str) {
-    int y, x;
-    getyx(stdscr, y, x);
-
-    mvprintw(ms->h + 3, 1, "%s", str);
-
-    move(y, x);
-}
-
-/* clear_line: clears a line in the screen */
-static inline void clear_line(int y) {
-    int oy, ox;
-    getyx(stdscr, oy, ox);
-
-    move(y, 0);
-    clrtoeol();
-
-    move(oy, ox);
-}
-
 /* reveal_tiles: reveals the needed tiles using recursion, based on y and x */
 static void reveal_tiles(ms_t* ms, int fy, int fx) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
@@ -270,6 +277,31 @@ static void reveal_tiles(ms_t* ms, int fy, int fx) {
                 if (!(ms->grid[y * ms->w + x].flags & FLAG_CLEARED))
                     reveal_tiles(ms, y, x);
     }
+}
+
+/* toggle_flag: toggles the FLAG_FLAGGED bit of the tile at (fy,fx) */
+static inline void toggle_flag(ms_t* ms, int fy, int fx) {
+    if (ms->grid[fy * ms->w + fx].flags & FLAG_CLEARED) {
+        print_message(ms, "Can't flag a revealed tile!");
+        return;
+    }
+
+    if (ms->grid[fy * ms->w + fx].flags & FLAG_FLAGGED)
+        ms->grid[fy * ms->w + fx].flags &= ~FLAG_FLAGGED;
+    else
+        ms->grid[fy * ms->w + fx].flags |= FLAG_FLAGGED;
+}
+
+/* check_win: returns true if all bombs have been flagged */
+static bool check_win(ms_t* ms) {
+    for (int y = 0; y < ms->h; y++)
+        for (int x = 0; x < ms->w; x++)
+            /* If there is an unflagged bomb, return false */
+            if (ms->grid[y * ms->w + x].c == BOMB_CH &&
+                !(ms->grid[y * ms->w + x].flags & FLAG_FLAGGED))
+                return false;
+
+    return true;
 }
 
 int main(int argc, char** argv) {
@@ -353,11 +385,17 @@ int main(int argc, char** argv) {
             case 'f':
                 /* If we just started playing, but we don't have the bombs */
                 if (ms.playing == PLAYING_CLEAR) {
-                    print_message(&ms, "Can't flag a tile before revealing!");
+                    print_message(&ms, "Can't flag a tile before starting the "
+                                       "game!");
                     break;
                 }
 
-                /* TODO */
+                toggle_flag(&ms, cursor.y, cursor.x);
+
+                if (check_win(&ms)) {
+                    print_message(&ms, "You won! Press any key to continue.");
+                    ms.playing = PLAYING_FALSE;
+                }
 
                 break;
             case ' ':
