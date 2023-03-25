@@ -94,7 +94,8 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
                    "        hjkl - Move in the grid (vim-like)\n"
                    "           f - Flag bomb\n"
                    "     <space> - Reveal tile\n"
-                   "           r - Reveal all tiles and end game\n");
+                   "           r - Reveal all tiles and end game\n"
+                   "           q - Quit the game\n");
             return 0;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
             arg_error = true;
