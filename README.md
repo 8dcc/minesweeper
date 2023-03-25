@@ -42,7 +42,6 @@ Controls:
 ```
 
 #### Characters:
-**Example:**
 ```
 +--------------------------------------------------+
 |..................................................|
@@ -71,7 +70,6 @@ Controls:
 
 ```
 
-**Legend:**
 - ` `: Empty tile with no bombs adjacent.
 - `.`: Unknown tile that can be revealed using `<space>` or flagged using `f`.
 - `F`: Flagged tile that can be unflagged with `f`.
