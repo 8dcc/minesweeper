@@ -36,8 +36,10 @@ $ ./minesweeper.out --keys
 Controls:
     <arrows> - Move in the grid
         hjkl - Move in the grid (vim-like)
-           f - Flag bomb
      <space> - Reveal tile
+    <LMouse> - Reveal clicked bomb
+           f - Flag bomb
+    <RMouse> - Flag clicked bomb
            r - Reveal all tiles and end game
            q - Quit the game
 ```
