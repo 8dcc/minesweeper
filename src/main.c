@@ -332,8 +332,8 @@ int main(int argc, char** argv) {
 
     redraw_grid(&ms);
 
-    /* User cursor in the grid, not the screen. Start at first tile */
-    point_t cursor = (point_t){ 0, 0 };
+    /* User cursor in the grid, not the screen. Start at the middle. */
+    point_t cursor = (point_t){ (ms.h - 1) / 2, (ms.w - 1) / 2 };
 
     /* Char the user is pressing */
     int c = 0;
