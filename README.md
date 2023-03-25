@@ -39,6 +39,7 @@ Controls:
            f - Flag bomb
      <space> - Reveal tile
            r - Reveal all tiles and end game
+           q - Quit the game
 ```
 
 #### Characters:
