@@ -7,6 +7,9 @@
 #define MIN_W     10
 #define MIN_H     10
 
+/* Bombs won't spawn in a 3x3 grid from the starting reveal */
+#define BOMB_MARGIN 3
+
 #define DEFAULT_DIFFICULTY 30 /* 1-100% */
 #define MIN_BOMBS 5
 #define MAX_BOMBS 60

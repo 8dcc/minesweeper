@@ -229,7 +229,7 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
 
     /* Actual tiles available for bombs (keep in mind the empty zone around the
      * cursor) */
-    const int max_bombs = ms->w * ms->h - (MIN_H - 8) - (MIN_W - 8);
+    const int max_bombs = ms->w * ms->h - BOMB_MARGIN * 4;
     if (total_bombs > max_bombs) {
 #ifdef DEBUG
         fprintf(stderr,
@@ -246,10 +246,10 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
         int bomb_x = rand() % ms->w;
 
         /* Leave an empty zone around cursor */
-        if (bomb_y > start.y - ((MIN_H - 4) / 2) &&
-            bomb_y < start.y + ((MIN_H - 4) / 2) &&
-            bomb_x > start.x - ((MIN_W - 4) / 2) &&
-            bomb_x < start.x + ((MIN_W - 4) / 2)) {
+        if (bomb_y > start.y - BOMB_MARGIN &&
+            bomb_y < start.y + BOMB_MARGIN &&
+            bomb_x > start.x - BOMB_MARGIN &&
+            bomb_x < start.x + BOMB_MARGIN) {
             bombs--;
             continue;
         }
