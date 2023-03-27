@@ -79,3 +79,18 @@ Controls:
 - `@`: You just revealed a tile with a bomb. You lost.
 - `<number>`: Empty tile with *N* adjacent bombs.
 
+### Aditional features
+Comment the following line inside [`src/defines.h`](src/defines.h) if you don't
+want this feature:
+```c
+/*
+ * This line adds the "reveal surrounding" feature. With this feature, adjacent
+ * tiles will get revealed if the user is trying to reveal:
+ *   - An already revealed tile
+ *   - With adjacent bombs
+ *   - With all bombs flagged
+ * Comment this line if you don't want this feature.
+ */
+#define REVEAL_SURROUNDING
+```
+
