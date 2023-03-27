@@ -13,7 +13,7 @@
 
 typedef struct {
     char c;        /* Char in that tile, actual item */
-    uint8_t flags; /* Tile status (revealed, flaged, etc) */
+    uint8_t flags; /* Tile status (revealed, flagged, etc) */
 } tile_t;
 
 typedef struct {
@@ -246,10 +246,8 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
         int bomb_x = rand() % ms->w;
 
         /* Leave an empty zone around cursor */
-        if (bomb_y > start.y - BOMB_MARGIN &&
-            bomb_y < start.y + BOMB_MARGIN &&
-            bomb_x > start.x - BOMB_MARGIN &&
-            bomb_x < start.x + BOMB_MARGIN) {
+        if (bomb_y > start.y - BOMB_MARGIN && bomb_y < start.y + BOMB_MARGIN &&
+            bomb_x > start.x - BOMB_MARGIN && bomb_x < start.x + BOMB_MARGIN) {
             bombs--;
             continue;
         }
@@ -258,8 +256,25 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
     }
 }
 
-/* reveal_tiles: reveals the needed tiles using recursion, based on y and x */
-static void reveal_tiles(ms_t* ms, int fy, int fx) {
+/* surrounding_bombs_flagged: returns true if all surrounding bombs from a cell
+ * have been flagged */
+static inline bool surrounding_bombs_flagged(ms_t* ms, int fy, int fx) {
+    /* We assume get_bombs() has been called and it didn't return 0 */
+
+    for (int y = (fy > 0) ? fy - 1 : fy; y <= fy + 1 && y < ms->h; y++)
+        for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
+            /* We found an adjacent bomb and it was not flagged */
+            if (ms->grid[y * ms->w + x].c == BOMB_CH &&
+                !(ms->grid[y * ms->w + x].flags & FLAG_FLAGGED))
+                return false;
+
+    return true;
+}
+
+/* reveal_tiles: reveals the needed tiles using recursion, based on y and x. The
+ * user_call parameter is used to know if we are recursing in the current call
+ * or not */
+static void reveal_tiles(ms_t* ms, int fy, int fx, bool user_call) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
         print_message(ms, "You lost. Press any key to restart.");
         ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
@@ -267,10 +282,13 @@ static void reveal_tiles(ms_t* ms, int fy, int fx) {
         return;
     }
 
-    ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
-
     if (!get_bombs(ms, fy, fx)) {
-        /* No bombs, reveal surrounding tiles
+        /* If we have no bombs in surrounding tiles, make sure we mark the
+         * current one as revealed so we don't have an endless loop when
+         * recursing */
+        ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
+
+        /* No bombs in surrounding tiles, reveal them
          * ###
          * #X#
          * ### */
@@ -278,7 +296,33 @@ static void reveal_tiles(ms_t* ms, int fy, int fx) {
             for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
                 /* If we are not revealing that one, reveal */
                 if (!(ms->grid[y * ms->w + x].flags & FLAG_CLEARED))
-                    reveal_tiles(ms, y, x);
+                    reveal_tiles(ms, y, x, false);
+    } else {
+        /* This part is for revealing adjacent tiles when clicking a revealed
+         * one if all adjacent bombs have been flagged. We only care about this
+         * feature if the user is the function caller.
+         *
+         * We have adjacent bombs, check if the tile we are tying to reveal was
+         * already revealed */
+        if (user_call && ms->grid[fy * ms->w + fx].flags & FLAG_CLEARED) {
+#ifdef REVEAL_SURROUNDING
+            /* If it was, check if all surrounding bombs have been flagged by
+             * the user */
+            if (surrounding_bombs_flagged(ms, fy, fx))
+                /* If they have been, we can automatically reveal all the other
+                 * non-bomb adjacent tiles when clicking it. */
+                for (int y = (fy > 0) ? fy - 1 : fy; y <= fy + 1 && y < ms->h;
+                     y++)
+                    for (int x = (fx > 0) ? fx - 1 : fx;
+                         x <= fx + 1 && x < ms->w; x++)
+                        if (ms->grid[y * ms->w + x].c != BOMB_CH)
+                            reveal_tiles(ms, y, x, false);
+#endif
+        } else {
+            /* If the current tile has bombs adjacent, but was not revealed,
+             * reveal it */
+            ms->grid[fy * ms->w + fx].flags |= FLAG_CLEARED;
+        }
     }
 }
 
@@ -430,7 +474,7 @@ int main(int argc, char** argv) {
                     ms.playing = PLAYING_TRUE;
                 }
 
-                reveal_tiles(&ms, cursor.y, cursor.x);
+                reveal_tiles(&ms, cursor.y, cursor.x, true);
                 break;
             case 'r':
                 /* Generate if it's the first time playing */

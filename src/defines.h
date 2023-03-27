@@ -2,6 +2,16 @@
 #ifndef _DEFINES_H
 #define _DEFINES_H 1
 
+/*
+ * This line adds the "reveal surrounding" feature. With this feature, adjacent
+ * tiles will get revealed if the user is trying to reveal:
+ *   - An already revealed tile
+ *   - With adjacent bombs
+ *   - With all bombs flagged
+ * Comment this line if you don't want this feature.
+ */
+#define REVEAL_SURROUNDING
+
 #define DEFAULT_W 50
 #define DEFAULT_H 20
 #define MIN_W     10
@@ -11,8 +21,8 @@
 #define BOMB_MARGIN 3
 
 #define DEFAULT_DIFFICULTY 30 /* 1-100% */
-#define MIN_BOMBS 5
-#define MAX_BOMBS 60
+#define MIN_BOMBS          5
+#define MAX_BOMBS          60
 
 /* For tile_t.flags */
 enum tile_flags {
@@ -34,7 +44,7 @@ enum playing_flags {
 #define FLAG_CH 'F'
 
 /* Special keys */
-#define KEY_CTRLC  3
+#define KEY_CTRLC 3
 
 #endif /* _DEFINES_H */
 
