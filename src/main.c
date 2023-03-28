@@ -499,11 +499,23 @@ int main(int argc, char** argv) {
                     const int border_sz = 1;
                     if (event.bstate & BUTTON1_PRESSED) {
                         cursor.y = event.y - border_sz;
+                        if (cursor.y >= ms.h)
+                            cursor.y = ms.h - 1;
+
                         cursor.x = event.x - border_sz;
+                        if (cursor.x >= ms.w)
+                            cursor.x = ms.w - 1;
+
                         goto clearTile;
                     } else if (event.bstate & BUTTON3_PRESSED) {
                         cursor.y = event.y - border_sz;
+                        if (cursor.y >= ms.h)
+                            cursor.y = ms.h - 1;
+
                         cursor.x = event.x - border_sz;
+                        if (cursor.x >= ms.w)
+                            cursor.x = ms.w - 1;
+
                         goto toggleFlag;
                     }
                 }
