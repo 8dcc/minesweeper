@@ -31,6 +31,9 @@ typedef struct {
     uint16_t x;
 } point_t;
 
+/* Used to check if we can use color at runtime */
+bool use_color = false;
+
 /* parse_resolution: parses a resolution string with format "WIDTHxHEIGHT" using
  * atoi. Saves integers in dst_w and dst_h */
 static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
@@ -131,6 +134,9 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
 
 /* draw_border: draws the grid border for the ms */
 static void draw_border(ms_t* ms) {
+    BOLD_ON();
+    SET_COL(COL_NORM);
+
     /* First line */
     mvaddch(0, 0, '+');
     for (int x = 0; x < ms->w; x++)
@@ -148,6 +154,9 @@ static void draw_border(ms_t* ms) {
     for (int x = 0; x < ms->w; x++)
         mvaddch(ms->h + 1, x + 1, '-');
     mvaddch(ms->h + 1, ms->w + 1, '+');
+
+    RESET_COL(COL_NORM);
+    BOLD_OFF();
 }
 
 /* init_grid: initializes the empty background grid for the ms struct */
@@ -180,7 +189,11 @@ static void print_message(ms_t* ms, const char* str) {
     int y, x;
     getyx(stdscr, y, x);
 
+    SET_COL(COL_NORM);
+
     mvprintw(ms->h + 3, 1, "%s", str);
+
+    RESET_COL(COL_NORM);
 
     move(y, x);
 }
@@ -209,16 +222,38 @@ static void redraw_grid(ms_t* ms) {
 
             if (ms->grid[y * ms->w + x].flags & FLAG_CLEARED) {
                 const int bombs = get_bombs(ms, y, x);
-                if (bombs && ms->grid[y * ms->w + x].c != BOMB_CH)
+                if (bombs && ms->grid[y * ms->w + x].c != BOMB_CH) {
+                    BOLD_ON();
+                    /* 5 -> COL_5. See color_ids enum in defines.h */
+                    SET_COL(bombs);
+
                     /* Number */
                     mvaddch(final_y, final_x, bombs + '0');
-                else
+
+                    RESET_COL(bombs);
+                    BOLD_OFF();
+                } else {
+                    SET_COL(COL_BOMB);
+
                     /* Empty or bomb (we lost) */
                     mvaddch(final_y, final_x, ms->grid[y * ms->w + x].c);
+
+                    RESET_COL(COL_BOMB);
+                }
             } else if (ms->grid[y * ms->w + x].flags & FLAG_FLAGGED) {
+                BOLD_ON();
+                SET_COL(COL_FLAG);
+
                 mvaddch(final_y, final_x, FLAG_CH);
+
+                RESET_COL(COL_FLAG);
+                BOLD_OFF();
             } else {
+                SET_COL(COL_UNK);
+
                 mvaddch(final_y, final_x, UNKN_CH);
+
+                RESET_COL(COL_UNK);
             }
         }
     }
@@ -376,6 +411,29 @@ int main(int argc, char** argv) {
     mousemask(BUTTON1_PRESSED | BUTTON3_PRESSED, NULL);
     MEVENT event;
 
+#ifdef USE_COLOR
+    /* Global used to indicate redraw_grid that color is supported at runtime */
+    use_color = has_colors();
+
+    if (use_color) {
+        start_color();
+
+        init_pair(COL_NORM, COLOR_WHITE, COLOR_BLACK);
+        init_pair(COL_1, COLOR_CYAN, COLOR_BLACK);
+        init_pair(COL_2, COLOR_BLUE, COLOR_BLACK);
+        init_pair(COL_3, COLOR_GREEN, COLOR_BLACK);
+        init_pair(COL_4, COLOR_YELLOW, COLOR_BLACK);
+        init_pair(COL_5, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(COL_6, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(COL_7, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(COL_8, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(COL_9, COLOR_MAGENTA, COLOR_BLACK);
+        init_pair(COL_FLAG, COLOR_RED, COLOR_BLACK);
+        init_pair(COL_BOMB, COLOR_RED, COLOR_BLACK);
+        init_pair(COL_UNK, COLOR_WHITE, COLOR_BLACK);
+    }
+#endif
+
     /* Init random seed */
     srand(time(NULL));
 
@@ -503,6 +561,12 @@ int main(int argc, char** argv) {
                 break;
         }
     } while (c != 'q');
+
+    /* Reset colors just in case */
+    if (use_color) {
+        attroff(A_BOLD);
+        attron(COLOR_PAIR(COL_NORM));
+    }
 
     free(ms.grid);
     endwin();

@@ -12,6 +12,56 @@
  */
 #define REVEAL_SURROUNDING
 
+/*
+ * If you compile the program with USE_COLOR and your terminal supports it, it
+ * will render the tiles with color.
+ */
+#define USE_COLOR
+
+enum color_ids {
+    COL_NORM = 0, /* White */
+    COL_1    = 1,
+    COL_2    = 2,
+    COL_3    = 3,
+    COL_4    = 4,
+    COL_5    = 5,
+    COL_6    = 6,
+    COL_7    = 7,
+    COL_8    = 8,
+    COL_9    = 9,
+    COL_FLAG = 10, /* Red */
+    COL_BOMB = 11, /* Red */
+    COL_UNK  = 12, /* Gray */
+};
+
+#define SET_COL(col)                 \
+    {                                \
+        if (use_color) {             \
+            attron(COLOR_PAIR(col)); \
+        }                            \
+    }
+
+#define RESET_COL(col)                \
+    {                                 \
+        if (use_color) {              \
+            attroff(COLOR_PAIR(col)); \
+        }                             \
+    }
+
+#define BOLD_ON()           \
+    {                       \
+        if (use_color) {    \
+            attron(A_BOLD); \
+        }                   \
+    }
+
+#define BOLD_OFF()           \
+    {                        \
+        if (use_color) {     \
+            attroff(A_BOLD); \
+        }                    \
+    }
+
 #define DEFAULT_W 50
 #define DEFAULT_H 20
 #define MIN_W     10
