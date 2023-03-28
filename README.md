@@ -3,8 +3,9 @@
 
 ### Description
 Simple CLI minesweeper with custom resolution (game size), difficulty and
-vim-like movement. Currently no color support but feel free to make a Pull
-Request.
+vim-like movement. It has mouse support (if your terminal supports it) and also
+has color support (if your terminal supports it and it was compiled with
+`USE_COLOR`).
 
 ### Building
 ```console
@@ -92,5 +93,15 @@ want this feature:
  * Comment this line if you don't want this feature.
  */
 #define REVEAL_SURROUNDING
+```
+
+Comment the following line inside [`src/defines.h`](src/defines.h) if you don't
+want color support:
+```c
+/*
+ * If you compile the program with USE_COLOR and your terminal supports it, it
+ * will render the tiles with color.
+ */
+#define USE_COLOR
 ```
 
