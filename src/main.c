@@ -98,9 +98,11 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
                    "    <arrows> - Move in the grid\n"
                    "        hjkl - Move in the grid (vim-like)\n"
                    "     <space> - Reveal tile\n"
-                   "    <LMouse> - Reveal clicked bomb\n"
                    "           f - Flag bomb\n"
+#ifdef USE_MOUSE
+                   "    <LMouse> - Reveal clicked bomb\n"
                    "    <RMouse> - Flag clicked bomb\n"
+#endif
                    "           r - Reveal all tiles and end game\n"
                    "           q - Quit the game\n");
             return 0;
@@ -407,9 +409,11 @@ int main(int argc, char** argv) {
     noecho();             /* Don't print when typing */
     keypad(stdscr, true); /* Enable keypad (arrow keys) */
 
+#ifdef USE_MOUSE
     /* Enable mouse support and declare ncurses mouse event */
     mousemask(BUTTON1_PRESSED | BUTTON3_PRESSED, NULL);
     MEVENT event;
+#endif
 
 #ifdef USE_COLOR
     /* Global used to indicate redraw_grid that color is supported at runtime */
@@ -494,6 +498,7 @@ int main(int argc, char** argv) {
                 if (cursor.x < ms.w - 1)
                     cursor.x++;
                 break;
+#ifdef USE_MOUSE
             case KEY_MOUSE:
                 if (getmouse(&event) == OK) {
                     const int border_sz = 1;
@@ -520,8 +525,9 @@ int main(int argc, char** argv) {
                     }
                 }
                 break;
-            case 'f':
             toggleFlag:
+#endif
+            case 'f':
                 /* If we just started playing, but we don't have the bombs */
                 if (ms.playing == PLAYING_CLEAR) {
                     print_message(&ms, "Can't flag a tile before starting the "
@@ -537,8 +543,10 @@ int main(int argc, char** argv) {
                 }
 
                 break;
-            case ' ':
+#ifdef USE_MOUSE
             clearTile:
+#endif
+            case ' ':
                 /* Initialize the bombs once we reveal for the first time */
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(&ms, cursor,

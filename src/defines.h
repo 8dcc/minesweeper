@@ -18,6 +18,12 @@
  */
 #define USE_COLOR
 
+/*
+ * If you compile the program with USE_MOUSE and your terminal supports it, it
+ * will make the tiles clickable.
+ */
+#define USE_MOUSE
+
 enum color_ids {
     COL_NORM = 0, /* White */
     COL_1    = 1,
