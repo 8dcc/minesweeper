@@ -224,7 +224,14 @@ static void redraw_grid(ms_t* ms) {
 
             if (ms->grid[y * ms->w + x].flags & FLAG_CLEARED) {
                 const int bombs = get_bombs(ms, y, x);
-                if (bombs && ms->grid[y * ms->w + x].c != BOMB_CH) {
+                if (ms->grid[y * ms->w + x].c == BOMB_CH) {
+                    SET_COL(COL_BOMB);
+
+                    /* Bomb (we lost) */
+                    mvaddch(final_y, final_x, BOMB_CH);
+
+                    RESET_COL(COL_BOMB);
+                } else if (bombs) {
                     BOLD_ON();
                     /* 5 -> COL_5. See color_ids enum in defines.h */
                     SET_COL(bombs);
@@ -235,12 +242,12 @@ static void redraw_grid(ms_t* ms) {
                     RESET_COL(bombs);
                     BOLD_OFF();
                 } else {
-                    SET_COL(COL_BOMB);
+                    SET_COL(COL_NORM);
 
-                    /* Empty or bomb (we lost) */
+                    /* Empty tile with no bombs adjacent */
                     mvaddch(final_y, final_x, ms->grid[y * ms->w + x].c);
 
-                    RESET_COL(COL_BOMB);
+                    RESET_COL(COL_NORM);
                 }
             } else if (ms->grid[y * ms->w + x].flags & FLAG_FLAGGED) {
                 BOLD_ON();
