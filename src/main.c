@@ -582,12 +582,6 @@ int main(int argc, char** argv) {
         }
     } while (c != 'q');
 
-    /* Reset colors just in case */
-    if (use_color) {
-        attroff(A_BOLD);
-        attron(COLOR_PAIR(COL_NORM));
-    }
-
     free(ms.grid);
     endwin();
     return 0;
