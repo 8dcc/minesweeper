@@ -221,49 +221,42 @@ static void redraw_grid(ms_t* ms) {
         for (int x = 0; x < ms->w; x++) {
             const int final_y = y + border_sz;
             const int final_x = x + border_sz;
+            int final_col     = COL_NORM;
+            char final_ch     = 0;
 
             if (ms->grid[y * ms->w + x].flags & FLAG_CLEARED) {
                 const int bombs = get_bombs(ms, y, x);
                 if (ms->grid[y * ms->w + x].c == BOMB_CH) {
-                    SET_COL(COL_BOMB);
-
                     /* Bomb (we lost) */
-                    mvaddch(final_y, final_x, BOMB_CH);
-
-                    RESET_COL(COL_BOMB);
+                    final_col = COL_BOMB;
+                    final_ch  = BOMB_CH;
                 } else if (bombs) {
                     BOLD_ON();
                     /* 5 -> COL_5. See color_ids enum in defines.h */
-                    SET_COL(bombs);
+                    final_col = bombs;
 
                     /* Number */
-                    mvaddch(final_y, final_x, bombs + '0');
-
-                    RESET_COL(bombs);
-                    BOLD_OFF();
+                    final_ch = bombs + '0';
                 } else {
-                    SET_COL(COL_NORM);
-
                     /* Empty tile with no bombs adjacent */
-                    mvaddch(final_y, final_x, ms->grid[y * ms->w + x].c);
-
-                    RESET_COL(COL_NORM);
+                    final_col = COL_NORM;
+                    final_ch  = ms->grid[y * ms->w + x].c;
                 }
             } else if (ms->grid[y * ms->w + x].flags & FLAG_FLAGGED) {
                 BOLD_ON();
-                SET_COL(COL_FLAG);
-
-                mvaddch(final_y, final_x, FLAG_CH);
-
-                RESET_COL(COL_FLAG);
-                BOLD_OFF();
+                final_col = COL_FLAG;
+                final_ch  = FLAG_CH;
             } else {
-                SET_COL(COL_UNK);
-
-                mvaddch(final_y, final_x, UNKN_CH);
-
-                RESET_COL(COL_UNK);
+                final_col = COL_UNK;
+                final_ch  = UNKN_CH;
             }
+
+            SET_COL(final_col);
+
+            mvaddch(final_y, final_x, final_ch);
+
+            RESET_COL(final_col);
+            BOLD_OFF();
         }
     }
 }
