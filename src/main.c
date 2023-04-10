@@ -13,29 +13,50 @@
 
 #define DIFFIC2BOMBPERCENT(d) ((MAX_BOMBS - MIN_BOMBS) * d / 100 + MIN_BOMBS)
 
+/**
+ * @struct tile_t
+ * @brief Tile of the minesweeper.
+ * @description The char indicates its contents and the flags special
+ * information (for example if the user flagged the tile, revealed it...)
+ */
 typedef struct {
-    char c;        /* Char in that tile, actual item */
-    uint8_t flags; /* Tile status (revealed, flagged, etc) */
+    char c;        /**< @brief Char in that tile, actual item */
+    uint8_t flags; /**< @brief Tile status (revealed, flagged, etc) */
 } tile_t;
 
+/**
+ * @struct ms_t
+ * @brief Minesweeper struct containing the game information.
+ */
 typedef struct {
-    uint16_t w;         /* Minesweeper width */
-    uint16_t h;         /* Minesweeper height */
-    tile_t* grid;       /* Pointer to the minesweeper grid */
-    uint8_t playing;    /* The user revealed the first tile */
-    uint8_t difficulty; /* Percentage of bombs to fill in the grid */
+    uint16_t w;         /**< @brief Minesweeper width */
+    uint16_t h;         /**< @brief Minesweeper height */
+    tile_t* grid;       /**< @brief Pointer to the minesweeper grid */
+    uint8_t playing;    /**< @brief The user revealed the first tile */
+    uint8_t difficulty; /**< @brief Percentage of bombs to fill in the grid */
 } ms_t;
 
+/**
+ * @struct point_t
+ * @brief Point in the terminal
+ */
 typedef struct {
-    uint16_t y;
-    uint16_t x;
+    uint16_t y; /**< @brief Y coordinate */
+    uint16_t x; /**< @brief X coordinate */
 } point_t;
 
-/* Used to check if we can use color at runtime */
+/**
+ * @var use_color
+ * @brief Used to check if we can use color at runtime
+ */
 bool use_color = false;
 
-/* parse_resolution: parses a resolution string with format "WIDTHxHEIGHT" using
- * atoi. Saves integers in dst_w and dst_h */
+/**
+ * @brief Parses a resolution string with format `WIDTHxHEIGHT` using atoi.
+ * @param[out] dst_w Pointer where to save the resolution's width
+ * @param[out] dst_h Pointer where to save the resolution's height
+ * @param[inout] src String containing the resolution in `WIDTHxHEIGHT` format
+ */
 static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
     *dst_w = 0;
     *dst_h = 0;
@@ -55,8 +76,13 @@ static void parse_resolution(uint16_t* dst_w, uint16_t* dst_h, char* src) {
     *dst_h = atoi(src);
 }
 
-/* parse_args: parses the program arguments changing the properties of ms.
- * Returns false if the caller needs to exit */
+/**
+ * @brief Parses the program arguments changing the properties of ms.
+ * @param[in] argc Number of arguments from main.
+ * @param[in] argv String vector with the artuments.
+ * @param[out] ms Target ms_t struct to write the changes.
+ * @return False if the caller (main()) needs to exit. True otherwise.
+ */
 static inline bool parse_args(int argc, char** argv, ms_t* ms) {
     bool arg_error = false;
     for (int i = 1; i < argc; i++) {
@@ -134,8 +160,11 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
     return true;
 }
 
-/* draw_border: draws the grid border for the ms */
-static void draw_border(ms_t* ms) {
+/**
+ * @brief Draws the grid border for the minesweeper.
+ * @param[in] ms Description
+ */
+static void draw_border(const ms_t* ms) {
     BOLD_ON();
     SET_COL(COL_NORM);
 
@@ -161,7 +190,10 @@ static void draw_border(ms_t* ms) {
     BOLD_OFF();
 }
 
-/* init_grid: initializes the empty background grid for the ms struct */
+/**
+ * @brief Initializes the empty background grid for the ms_t struct
+ * @param[out] ms The minesweeper struct
+ */
 static void init_grid(ms_t* ms) {
     for (int y = 0; y < ms->h; y++) {
         for (int x = 0; x < ms->w; x++) {
@@ -171,7 +203,14 @@ static void init_grid(ms_t* ms) {
     }
 }
 
-/* get_bombs: returns the number of bombs surrounding a specified tile */
+/**
+ * @brief Returns the number of bombs adjacent to a specified tile.
+ * @details Adjacent meaning in a 3x3 grid with the speicified tile at its
+ * center.
+ * @param[in] ms Minesweeper struct needed to get the bomb locations.
+ * @param[in] fy, fx Position of the tile to check.
+ * @return Number of bombs adjacent
+ */
 static int get_bombs(ms_t* ms, int fy, int fx) {
     int ret = 0;
 
@@ -186,7 +225,11 @@ static int get_bombs(ms_t* ms, int fy, int fx) {
     return ret;
 }
 
-/* print_message: prints the specified message 2 lines bellow ms's grid */
+/**
+ * @brief Prints the specified message 2 lines bellow `ms`'s grid
+ * @param[in] ms Minesweeper struct needed to get the grid size.
+ * @param[in] str String to be printed.
+ */
 static void print_message(ms_t* ms, const char* str) {
     int y, x;
     getyx(stdscr, y, x);
@@ -200,7 +243,11 @@ static void print_message(ms_t* ms, const char* str) {
     move(y, x);
 }
 
-/* clear_line: clears a line in the screen */
+/**
+ * @brief Clears a line in the screen.
+ * @details Doesn't change the cursor position.
+ * @param[in] y Line number starting from 0 to clear.
+ */
 static inline void clear_line(int y) {
     int oy, ox;
     getyx(stdscr, oy, ox);
@@ -211,7 +258,12 @@ static inline void clear_line(int y) {
     move(oy, ox);
 }
 
-/* redraw_grid: redraws the grid based on the ms.grid array */
+/**
+ * @brief Redraws the grid based on the ms.grid array.
+ * @details Color macros will only do something if color is enabled and
+ * supported.
+ * @param[in] ms Minesweeper struct needed to get the grid.
+ */
 static void redraw_grid(ms_t* ms) {
     const int border_sz = 1;
 
@@ -261,24 +313,22 @@ static void redraw_grid(ms_t* ms) {
     }
 }
 
-/* generate_grid: generate a random bomb grid with an empty space from the first
- * user selection */
+/**
+ * @brief Fill the grid with bombs at random locations.
+ * @details Will leave a margin area around the first user selection (so it
+ * never reveals a bomb on the first input).
+ * @param[inout] ms Minesweeper struct used to fill the grid.
+ * @param[in] start Position of the first tile that the user tried to reveal.
+ * @param[in] bomb_percent The percentage of bombs to fill.
+ */
 static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
     int total_bombs = ms->h * ms->w * bomb_percent / 100;
 
     /* Actual tiles available for bombs (keep in mind the empty zone around the
      * cursor) */
     const int max_bombs = ms->w * ms->h - BOMB_MARGIN * 4;
-    if (total_bombs > max_bombs) {
-#ifdef DEBUG
-        fprintf(stderr,
-                "generate_grid: Error. Can't generate %d bombs (%d%%) in grid "
-                "%dx%d.\n",
-                total_bombs, bomb_percent, ms->h, ms->w);
-        return;
-#endif
+    if (total_bombs > max_bombs)
         total_bombs = max_bombs;
-    }
 
     for (int bombs = 0; bombs < total_bombs; bombs++) {
         int bomb_y = rand() % ms->h;
@@ -295,11 +345,16 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
     }
 }
 
-/* surrounding_bombs_flagged: returns true if all surrounding bombs from a cell
- * have been flagged */
-static inline bool surrounding_bombs_flagged(ms_t* ms, int fy, int fx) {
-    /* We assume get_bombs() has been called and it didn't return 0 */
+/* surrounding_bombs_flagged:  */
 
+/**
+ * @brief Returns true if all adjacent bombs from a cell have been flagged.
+ * @details Assumes get_bombs() has been called and it didn't return 0.
+ * @param[in] ms Minesweeper struct used to read the grid.
+ * @param[in] fy, fx Position to check
+ * @return True if all adjacent bombs have been flagged by the user.
+ */
+static inline bool surrounding_bombs_flagged(ms_t* ms, int fy, int fx) {
     for (int y = (fy > 0) ? fy - 1 : fy; y <= fy + 1 && y < ms->h; y++)
         for (int x = (fx > 0) ? fx - 1 : fx; x <= fx + 1 && x < ms->w; x++)
             /* We found an adjacent bomb and it was not flagged */
@@ -310,9 +365,13 @@ static inline bool surrounding_bombs_flagged(ms_t* ms, int fy, int fx) {
     return true;
 }
 
-/* reveal_tiles: reveals the needed tiles using recursion, based on y and x. The
- * user_call parameter is used to know if we are recursing in the current call
- * or not */
+/**
+ * @brief Reveals the needed tiles using recursion, starting at y and x.
+ * @param[inout] ms Minesweeper struct used to save the revealed bombs.
+ * @param[in] fy, fx Position to be revealed.
+ * @param[in] user_call Used to know if we are recursing in the current function
+ * call or not.
+ */
 static void reveal_tiles(ms_t* ms, int fy, int fx, bool user_call) {
     if (ms->grid[fy * ms->w + fx].c == BOMB_CH) {
         print_message(ms, "You lost. Press any key to restart.");
@@ -365,7 +424,11 @@ static void reveal_tiles(ms_t* ms, int fy, int fx, bool user_call) {
     }
 }
 
-/* toggle_flag: toggles the FLAG_FLAGGED bit of the tile at (fy,fx) */
+/**
+ * @brief Toggles the FLAG_FLAGGED bit of the tile at the specified position.
+ * @param[out] ms Minesweeper struct for updating the flaged/unflagged tile.
+ * @param[in] fy, fx Position of the tile.
+ */
 static inline void toggle_flag(ms_t* ms, int fy, int fx) {
     if (ms->grid[fy * ms->w + fx].flags & FLAG_CLEARED) {
         print_message(ms, "Can't flag a revealed tile!");
@@ -378,7 +441,11 @@ static inline void toggle_flag(ms_t* ms, int fy, int fx) {
         ms->grid[fy * ms->w + fx].flags |= FLAG_FLAGGED;
 }
 
-/* check_win: returns true if all bombs have been flagged */
+/**
+ * @brief Check if the user won the current game.
+ * @param[in] ms Minesweeper struct used to get the bomb positions.
+ * @return True if all bombs have been flagged.
+ */
 static bool check_win(ms_t* ms) {
     for (int y = 0; y < ms->h; y++)
         for (int x = 0; x < ms->w; x++)
@@ -390,6 +457,12 @@ static bool check_win(ms_t* ms) {
     return true;
 }
 
+/**
+ * @brief Entry point of the program
+ * @param[in] argc Number of arguments
+ * @param[in] argv String vector with the artuments.
+ * @return Exit code
+ */
 int main(int argc, char** argv) {
     /* Main minesweeper struct */
     ms_t ms = (ms_t){
@@ -586,4 +659,3 @@ int main(int argc, char** argv) {
     endwin();
     return 0;
 }
-
