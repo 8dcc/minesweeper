@@ -2,9 +2,12 @@
 #ifndef _DEFINES_H
 #define _DEFINES_H 1
 
-/*
- * This line adds the "reveal surrounding" feature. With this feature, adjacent
- * tiles will get revealed if the user is trying to reveal:
+/**
+ * @def REVEAL_SURROUNDING
+ * @brief Compile with "reveal surrounding" feature
+ *
+ * If defined, adds the "reveal surrounding" feature. With this feature,
+ * adjacent tiles will get revealed if the user is trying to reveal:
  *   - An already revealed tile
  *   - With adjacent bombs
  *   - With all bombs flagged
@@ -12,34 +15,49 @@
  */
 #define REVEAL_SURROUNDING
 
-/*
- * If you compile the program with USE_COLOR and your terminal supports it, it
+/**
+ * @def USE_COLOR
+ * @brief Compile with color enabled.
+ *
+ * If you compile the program with `USE_COLOR` and your terminal supports it, it
  * will render the tiles with color.
  */
 #define USE_COLOR
 
-/*
- * If you compile the program with USE_MOUSE and your terminal supports it, it
+/**
+ * @def USE_MOUSE
+ * @brief Compile with mouse support.
+ *
+ * If you compile the program with `USE_MOUSE` and your terminal supports it, it
  * will make the tiles clickable.
  */
 #define USE_MOUSE
 
+/**
+ * @enum color_ids
+ * @brief Color ids used for the curses color pairs.
+ */
 enum color_ids {
-    COL_NORM = 0, /* White */
-    COL_1    = 1,
-    COL_2    = 2,
-    COL_3    = 3,
-    COL_4    = 4,
-    COL_5    = 5,
-    COL_6    = 6,
-    COL_7    = 7,
-    COL_8    = 8,
-    COL_9    = 9,
-    COL_FLAG = 10, /* Red */
-    COL_BOMB = 11, /* Red */
-    COL_UNK  = 12, /* Gray */
+    COL_NORM = 0,  /**< @brief White */
+    COL_1    = 1,  /**< @brief 1 bombs adjacent */
+    COL_2    = 2,  /**< @brief 2 bombs adjacent */
+    COL_3    = 3,  /**< @brief 3 bombs adjacent */
+    COL_4    = 4,  /**< @brief 4 bombs adjacent */
+    COL_5    = 5,  /**< @brief 5 bombs adjacent */
+    COL_6    = 6,  /**< @brief 6 bombs adjacent */
+    COL_7    = 7,  /**< @brief 7 bombs adjacent */
+    COL_8    = 8,  /**< @brief 8 bombs adjacent */
+    COL_9    = 9,  /**< @brief 9 bombs adjacent */
+    COL_FLAG = 10, /**< @brief Red  */
+    COL_BOMB = 11, /**< @brief Red  */
+    COL_UNK  = 12, /**< @brief Gray */
 };
 
+/**
+ * @name Color macros
+ * Will only work if color is enabled and supported.
+ * @{
+ */
 #define SET_COL(col)                 \
     {                                \
         if (use_color) {             \
@@ -67,40 +85,63 @@ enum color_ids {
             attroff(A_BOLD); \
         }                    \
     }
+/**
+ * @}
+ */
 
-#define DEFAULT_W 50
-#define DEFAULT_H 20
-#define MIN_W     10
-#define MIN_H     10
+#define DEFAULT_W 50 /**< @brief Default width */
+#define DEFAULT_H 20 /**< @brief Default height */
+#define MIN_W     10 /**< @brief Minimum width */
+#define MIN_H     10 /**< @brief Minimum height */
 
-/* Bombs won't spawn in a 3x3 grid from the starting reveal */
+/**
+ * @def BOMB_MARGIN
+ * @brief Bombs won't spawn in a 3x3 grid from the starting reveal
+ */
 #define BOMB_MARGIN 3
 
-#define DEFAULT_DIFFICULTY 30 /* 1-100% */
-#define MIN_BOMBS          5
-#define MAX_BOMBS          60
+#define DEFAULT_DIFFICULTY 30 /**< @brief 1-100% */
+#define MIN_BOMBS          5  /**< @brief Minimum ammount of bombs */
+#define MAX_BOMBS          60 /**< @brief Maximum ammount of bombs */
 
-/* For tile_t.flags */
+/**
+ * @enum tile_flags
+ * @brief For tile_t.flags
+ */
 enum tile_flags {
-    FLAG_NONE    = 0x0, /* 0000 */
-    FLAG_CLEARED = 0x1, /* 0001 */
-    FLAG_FLAGGED = 0x2, /* 0010 */
+    FLAG_NONE    = 0x0, /**< @brief Tile is hidden and not flagged */
+    FLAG_CLEARED = 0x1, /**< @brief Tile is revealed */
+    FLAG_FLAGGED = 0x2, /**< @brief Tile is flagged */
 };
 
-/* For ms_t.playing */
+/**
+ * @enum playing_flags
+ * @brief For ms_t.playing
+ */
 enum playing_flags {
-    PLAYING_FALSE = 0x0, /* Just started a game. Grid empty. */
-    PLAYING_TRUE  = 0x1, /* Playing a game. Grid filled. */
-    PLAYING_CLEAR = 0x2, /* Just initialized the empty grid. Fill with bombs */
+    PLAYING_FALSE = 0x0, /**< @brief Just started a game. Grid empty. */
+    PLAYING_TRUE  = 0x1, /**< @brief Playing a game. Grid filled. */
+    PLAYING_CLEAR = 0x2, /**< @brief Just initialized the empty grid. Fill with
+                            bombs */
 };
 
-#define UNKN_CH '.'
-#define BACK_CH ' '
-#define BOMB_CH '@'
-#define FLAG_CH 'F'
+/**
+ * @name Group title
+ * Description
+ * @{
+ */
+#define UNKN_CH '.' /**< @brief Not revealed tile */
+#define BACK_CH ' ' /**< @brief Empty tile with no bombs adjacent */
+#define BOMB_CH '@' /**< @brief Revealed tile with bomb */
+#define FLAG_CH 'F' /**< @brief Flagged hidden tile */
+/**
+ * @}
+ */
 
-/* Special keys */
+/**
+ * @def KEY_CTRLC
+ * Needed for getch()
+ */
 #define KEY_CTRLC 3
 
 #endif /* _DEFINES_H */
-
