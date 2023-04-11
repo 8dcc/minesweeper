@@ -5,9 +5,8 @@
 /**
  * @def REVEAL_SURROUNDING
  * @brief Compile with "reveal surrounding" feature
- *
- * If defined, adds the "reveal surrounding" feature. With this feature,
- * adjacent tiles will get revealed if the user is trying to reveal:
+ * @details If defined, adds the "reveal surrounding" feature. With this
+ * feature, adjacent tiles will get revealed if the user is trying to reveal:
  *   - An already revealed tile
  *   - With adjacent bombs
  *   - With all bombs flagged
@@ -16,20 +15,18 @@
 #define REVEAL_SURROUNDING
 
 /**
- * @def USE_COLOR
- * @brief Compile with color enabled.
- *
- * If you compile the program with `USE_COLOR` and your terminal supports it, it
- * will render the tiles with color.
+ * @def USE_ARROWS
+ * @brief Enable arrow key support.
+ * @details If you compile the program with `USE_ARROWS`, you will be able to
+ * navigate with the arrows.
  */
 #define USE_COLOR
 
 /**
- * @def USE_MOUSE
- * @brief Compile with mouse support.
- *
- * If you compile the program with `USE_MOUSE` and your terminal supports it, it
- * will make the tiles clickable.
+ * @def USE_COLOR
+ * @brief Compile with color enabled.
+ * @details If you compile the program with `USE_COLOR` and your terminal
+ * supports it, it will render the tiles with color.
  */
 #define USE_MOUSE
 
@@ -56,8 +53,7 @@ enum color_ids {
 /**
  * @name Color macros
  * Will only work if color is enabled and supported.
- * @{
- */
+ * @{ */
 #define SET_COL(col)                 \
     {                                \
         if (use_color) {             \
@@ -85,9 +81,7 @@ enum color_ids {
             attroff(A_BOLD); \
         }                    \
     }
-/**
- * @}
- */
+/** @} */
 
 #define DEFAULT_W 50 /**< @brief Default width */
 #define DEFAULT_H 20 /**< @brief Default height */
@@ -126,21 +120,17 @@ enum playing_flags {
 };
 
 /**
- * @name Group title
- * Description
- * @{
- */
+ * @name Characters for the tiles
+ * @{ */
 #define UNKN_CH '.' /**< @brief Not revealed tile */
 #define BACK_CH ' ' /**< @brief Empty tile with no bombs adjacent */
 #define BOMB_CH '@' /**< @brief Revealed tile with bomb */
 #define FLAG_CH 'F' /**< @brief Flagged hidden tile */
-/**
- * @}
- */
+/** @} */
 
 /**
  * @def KEY_CTRLC
- * Needed for getch()
+ * @brief Needed for getch()
  */
 #define KEY_CTRLC 3
 
