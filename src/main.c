@@ -162,7 +162,7 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
 
 /**
  * @brief Draws the grid border for the minesweeper.
- * @param[in] ms Description
+ * @param[in] ms Minesweeper structure for the width and height.
  */
 static void draw_border(const ms_t* ms) {
     BOLD_ON();
@@ -317,7 +317,7 @@ static void redraw_grid(ms_t* ms) {
  * @brief Fill the grid with bombs at random locations.
  * @details Will leave a margin area around the first user selection (so it
  * never reveals a bomb on the first input).
- * @param[inout] ms Minesweeper struct used to fill the grid.
+ * @param[out] ms Minesweeper struct used to fill the grid.
  * @param[in] start Position of the first tile that the user tried to reveal.
  * @param[in] bomb_percent The percentage of bombs to fill.
  */
@@ -344,8 +344,6 @@ static void generate_grid(ms_t* ms, point_t start, int bomb_percent) {
         ms->grid[bomb_y * ms->w + bomb_x].c = BOMB_CH;
     }
 }
-
-/* surrounding_bombs_flagged:  */
 
 /**
  * @brief Returns true if all adjacent bombs from a cell have been flagged.
