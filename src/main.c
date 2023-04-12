@@ -120,18 +120,18 @@ static inline bool parse_args(int argc, char** argv, ms_t* ms) {
                 break;
             }
         } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "--keys")) {
-            printf("Controls:\n"
-                   "    <arrows> - Move in the grid\n"
-                   "        hjkl - Move in the grid (vim-like)\n"
-                   "     <space> - Reveal tile\n"
-                   "           f - Flag bomb\n"
+            puts("Controls:\n"
+                 "    <arrows> - Move in the grid\n"
+                 "        hjkl - Move in the grid (vim-like)\n"
+                 "     <space> - Reveal tile\n"
+                 "           f - Flag bomb\n"
 #ifdef USE_MOUSE
-                   "    <LMouse> - Reveal clicked bomb\n"
-                   "    <RMouse> - Flag clicked bomb\n"
+                 "    <LMouse> - Reveal clicked bomb\n"
+                 "    <RMouse> - Flag clicked bomb\n"
 #endif
-                   "           r - Reveal all tiles and end game\n"
-                   "           q - Quit the game\n");
-            return 0;
+                 "           r - Reveal all tiles and end game\n"
+                 "           q - Quit the game");
+            return false;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
             arg_error = true;
             break;
