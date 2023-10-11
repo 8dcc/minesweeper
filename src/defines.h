@@ -114,10 +114,10 @@ enum playing_flags {
  * @brief Characters for the tiles
  */
 enum tile_chars {
-    UNKN_CH = '.', /* Not revealed tile */
-    BACK_CH = ' ', /* Empty tile with no bombs adjacent */
-    BOMB_CH = '@', /* Revealed tile with bomb */
-    FLAG_CH = 'F', /* Flagged hidden tile */
+    CH_UNKN = '.', /* Not revealed tile */
+    CH_BACK = ' ', /* Empty tile with no bombs adjacent */
+    CH_BOMB = '@', /* Revealed tile with bomb */
+    CH_FLAG = 'F', /* Flagged hidden tile */
 };
 
 /**

@@ -14,6 +14,7 @@
 #define DIFFIC2BOMBPERCENT(d) ((MAX_BOMBS - MIN_BOMBS) * d / 100 + MIN_BOMBS)
 #define REVEAL_TILE(P)        ms.grid[P.y * ms.w + P.x].flags |= FLAG_CLEARED
 #define HAS_FLAG(P, F)        (ms.grid[P.y * ms.w + P.x].flags & F)
+#define HAS_CHAR(P, C)        (ms.grid[P.y * ms.w + P.x].c == C)
 
 /**
  * @struct Tile
@@ -224,7 +225,7 @@ static void draw_border(void) {
 static inline void init_grid(void) {
     for (int y = 0; y < ms.h; y++) {
         for (int x = 0; x < ms.w; x++) {
-            ms.grid[y * ms.w + x].c     = BACK_CH;
+            ms.grid[y * ms.w + x].c     = CH_BACK;
             ms.grid[y * ms.w + x].flags = FLAG_NONE;
         }
     }
@@ -256,7 +257,7 @@ static int adjacent_bombs(vec2_t p) {
     vec2_t cur;
     for (cur.y = start.y; cur.y <= end.y; cur.y++)
         for (cur.x = start.x; cur.x <= end.x; cur.x++)
-            if (ms.grid[cur.y * ms.w + cur.x].c == BOMB_CH)
+            if (HAS_CHAR(cur, CH_BOMB))
                 ret++;
 
     return ret;
@@ -311,10 +312,10 @@ static void redraw_grid(void) {
 
             if (ms.grid[y * ms.w + x].flags & FLAG_CLEARED) {
                 const int bombs = adjacent_bombs((vec2_t){ x, y });
-                if (ms.grid[y * ms.w + x].c == BOMB_CH) {
+                if (ms.grid[y * ms.w + x].c == CH_BOMB) {
                     /* Bomb (we lost) */
                     final_col = COL_BOMB;
-                    final_ch  = BOMB_CH;
+                    final_ch  = CH_BOMB;
                 } else if (bombs) {
                     BOLD_ON();
                     /* 5 -> COL_5. See color_ids enum in defines.h */
@@ -330,10 +331,10 @@ static void redraw_grid(void) {
             } else if (ms.grid[y * ms.w + x].flags & FLAG_FLAGGED) {
                 BOLD_ON();
                 final_col = COL_FLAG;
-                final_ch  = FLAG_CH;
+                final_ch  = CH_FLAG;
             } else {
                 final_col = COL_UNK;
-                final_ch  = UNKN_CH;
+                final_ch  = CH_UNKN;
             }
 
             SET_COL(final_col);
@@ -373,7 +374,7 @@ static void generate_grid(vec2_t start, int bomb_percent) {
             continue;
         }
 
-        ms.grid[bomb_y * ms.w + bomb_x].c = BOMB_CH;
+        ms.grid[bomb_y * ms.w + bomb_x].c = CH_BOMB;
     }
 }
 
@@ -400,8 +401,7 @@ static inline bool surrounding_bombs_flagged(vec2_t p) {
     for (cur.y = start.y; cur.y <= end.y; cur.y++)
         for (cur.x = start.x; cur.x <= end.x; cur.x++)
             /* We found an adjacent bomb and it was not flagged */
-            if (ms.grid[cur.y * ms.w + cur.x].c == BOMB_CH &&
-                !HAS_FLAG(cur, FLAG_FLAGGED))
+            if (HAS_CHAR(cur, CH_BOMB) && !HAS_FLAG(cur, FLAG_FLAGGED))
                 return false;
 
     return true;
@@ -462,7 +462,7 @@ static inline void queue_push(vec2_t x) {
  * @todo Don't malloc and free the queue in each call, alloc once as global
  */
 void reveal_tiles(vec2_t p, bool user_call) {
-    if (user_call && ms.grid[p.y * ms.w + p.x].c == BOMB_CH) {
+    if (user_call && HAS_CHAR(p, CH_BOMB)) {
         print_message("You lost. Press any key to restart.");
         ms.grid[p.y * ms.w + p.x].flags |= FLAG_CLEARED;
         ms.playing = PLAYING_FALSE;
@@ -534,8 +534,7 @@ void reveal_tiles(vec2_t p, bool user_call) {
         vec2_t cur;
         for (cur.y = start.y; cur.y <= end.y; cur.y++)
             for (cur.x = start.x; cur.x <= end.x; cur.x++)
-                if (ms.grid[cur.y * ms.w + cur.x].c != BOMB_CH &&
-                    (cur.x != p.x || cur.y != p.y))
+                if (!HAS_CHAR(cur, CH_BOMB) && (cur.x != p.x || cur.y != p.y))
                     reveal_tiles(cur, false);
 #endif
     }
@@ -562,7 +561,7 @@ static inline bool check_win(void) {
     for (int y = 0; y < ms.h; y++)
         for (int x = 0; x < ms.w; x++)
             /* If there is an unflagged bomb, return false */
-            if (ms.grid[y * ms.w + x].c == BOMB_CH &&
+            if (ms.grid[y * ms.w + x].c == CH_BOMB &&
                 !(ms.grid[y * ms.w + x].flags & FLAG_FLAGGED))
                 return false;
 
