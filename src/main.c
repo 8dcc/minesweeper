@@ -13,6 +13,7 @@
 
 #define DIFFIC2BOMBPERCENT(d) ((MAX_BOMBS - MIN_BOMBS) * d / 100 + MIN_BOMBS)
 #define REVEAL_TILE(P)        ms.grid[P.y * ms.w + P.x].flags |= FLAG_CLEARED
+#define HAS_FLAG(P, F)        (ms.grid[P.y * ms.w + P.x].flags & F)
 
 /**
  * @struct Tile
@@ -400,7 +401,7 @@ static inline bool surrounding_bombs_flagged(vec2_t p) {
         for (cur.x = start.x; cur.x <= end.x; cur.x++)
             /* We found an adjacent bomb and it was not flagged */
             if (ms.grid[cur.y * ms.w + cur.x].c == BOMB_CH &&
-                !(ms.grid[cur.y * ms.w + cur.x].flags & FLAG_FLAGGED))
+                !HAS_FLAG(cur, FLAG_FLAGGED))
                 return false;
 
     return true;
@@ -414,7 +415,7 @@ static inline bool surrounding_bombs_flagged(vec2_t p) {
  */
 static inline bool is_hidden(vec2_t p) {
     return p.x >= 0 && p.x < ms.w && p.y >= 0 && p.y < ms.h &&
-           !(ms.grid[p.y * ms.w + p.x].flags & FLAG_CLEARED);
+           !HAS_FLAG(p, FLAG_CLEARED);
 }
 
 /**
@@ -504,7 +505,7 @@ void reveal_tiles(vec2_t p, bool user_call) {
                 }
             }
         }
-    } else if (user_call && (ms.grid[p.y * ms.w + p.x].flags & FLAG_CLEARED) &&
+    } else if (user_call && HAS_FLAG(p, FLAG_CLEARED) &&
                surrounding_bombs_flagged(p)) {
 #ifdef REVEAL_SURROUNDING
         /*
@@ -545,7 +546,7 @@ void reveal_tiles(vec2_t p, bool user_call) {
  * @param[in] p Position of the tile
  */
 static inline void toggle_flag(vec2_t p) {
-    if (ms.grid[p.y * ms.w + p.x].flags & FLAG_CLEARED) {
+    if (HAS_FLAG(p, FLAG_CLEARED)) {
         print_message("Can't flag a revealed tile!");
         return;
     }
@@ -741,8 +742,7 @@ int main(int argc, char** argv) {
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(cursor, DIFFIC2BOMBPERCENT(ms.difficulty));
                     ms.playing = PLAYING_TRUE;
-                } else if (ms.grid[cursor.y * ms.w + cursor.x].flags &
-                           FLAG_FLAGGED) {
+                } else if (HAS_FLAG(cursor, FLAG_FLAGGED)) {
                     print_message("Can't reveal a flagged tile.");
                     break;
                 }
