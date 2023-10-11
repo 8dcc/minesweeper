@@ -340,7 +340,7 @@ static void redraw_grid(void) {
 
             mvaddch(final_y, final_x, final_ch);
 
-            RESET_COL(COL_NORM);
+            RESET_COL(final_col);
             BOLD_OFF();
         }
     }
