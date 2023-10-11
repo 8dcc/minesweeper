@@ -741,6 +741,10 @@ int main(int argc, char** argv) {
                 if (ms.playing == PLAYING_CLEAR) {
                     generate_grid(cursor, DIFFIC2BOMBPERCENT(ms.difficulty));
                     ms.playing = PLAYING_TRUE;
+                } else if (ms.grid[cursor.y * ms.w + cursor.x].flags &
+                           FLAG_FLAGGED) {
+                    print_message("Can't reveal a flagged tile.");
+                    break;
                 }
 
                 reveal_tiles(cursor, true);
