@@ -11,6 +11,10 @@
  *   - With adjacent bombs
  *   - With all bombs flagged
  * Comment this line if you don't want this feature.
+ *
+ * FIXME: This feature can be currently exploited to "brute-force" discovery,
+ * since surrounding tiles will only be revealed if all adjacent bombs have been
+ * marked.
  */
 #define REVEAL_SURROUNDING
 
