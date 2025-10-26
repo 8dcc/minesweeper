@@ -1,0 +1,158 @@
+#+TITLE: README
+#+AUTHOR: 8dcc
+#+OPTIONS: toc:2
+#+STARTUP: nofold
+
+Simple terminal minesweeper with cursor support made in C, with =ncurses=.
+
+It features a simple CLI interface with support for custom difficulty, vi-like
+movement, cursor/mouse support, color highlighting, etc.
+
+Note that, for mouse and color support, your terminal must support it, and the
+program must have been compiled with =USE_MOUSE= and =USE_COLOR=, respectively.
+
+* Building
+
+For building this program, simply clone the repository and run =make=.
+
+#+begin_src bash
+git clone https://github.com/8dcc/minesweeper
+cd minesweeper
+make
+# ...
+#+end_src
+
+If, when running =make=, you encounter an error similar to the following:
+
+#+begin_src
+gcc -Wall -Wextra -o minesweeper.out src/main.c -lncurses -ltinfo
+/bin/ld: cannot find -ltinfo: No such file or directory
+collect2: error: ld returned 1 exit status
+make: *** [Makefile:22: minesweeper.out] Error 1
+#+end_src
+
+Try running make with ~LDLIBS=-lncurses~ as an argument, or editing the =Makefile=
+to remove =-ltinfo= from the linker options:
+
+#+begin_src diff
+diff --git a/Makefile b/Makefile
+index c353e96..778dcc0 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+
+ CC=gcc
+ CFLAGS=-Wall -Wextra -Wpedantic -Wshadow
+-LDLIBS=-lncurses -ltinfo
++LDLIBS=-lncurses
+
+ BIN=minesweeper.out
+#+end_src
+
+* Usage
+
+To view the available arguments, run the program with the =--help= argument.
+
+#+begin_src bash
+./minesweeper.out --help
+# Usage:
+#     ./minesweeper.out                   - Launch with default resolution
+#     ./minesweeper.out --help            - Show this help
+#     ./minesweeper.out -h                - Same as --help
+#     ./minesweeper.out --keys            - Show the controls
+#     ./minesweeper.out -k                - Same as --keys
+#     ./minesweeper.out --resolution WxH  - Launch with specified resolution (width, height)
+#     ./minesweeper.out -r WxH            - Same as --resolution
+#     ./minesweeper.out --difficulty N    - Use specified difficulty from 1 to 100. Default: 40
+#     ./minesweeper.out -d N              - Same as --difficulty
+#+end_src
+
+To view the available keys, run the program with the =--keys= argument.
+
+#+begin_src bash
+./minesweeper.out --keys
+# Controls:
+#     <arrows> - Move in the grid
+#         hjkl - Move in the grid (vim-like)
+#      <space> - Reveal tile
+#     <LMouse> - Reveal clicked bomb
+#            f - Flag bomb
+#     <RMouse> - Flag clicked bomb
+#            r - Reveal all tiles and end game
+#            q - Quit the game
+#+end_src
+
+** Display
+
+This is an example of the interface; it is harder to view because GitHub can't
+show the proper highlighting.
+
+#+begin_src
++--------------------------------------------------+
+|..................................................|
+|..................................................|
+|..................................................|
+|.......................211........................|
+|.......................1 1........................|
+|......................31 1........................|
+|.....................21  1123.....................|
+|..................2221      12....................|
+|..................1          111..................|
+|..................1211         1..................|
+|.....................1  111   12..................|
+|..................2211  1F1 113...................|
+|..................1   123.1 1.....................|
+|..................2   1@..1 11212.................|
+|..................11111...2     2.................|
+|..........................2     2.................|
+|.........................31  1111.................|
+|.........................2   1....................|
+|.........................3   2....................|
+|.........................2   1....................|
++--------------------------------------------------+
+
+ You lost. Press any key to restart.
+
+#+end_src
+
+This is the meaning of the characters shown previously:
+
+- =<space>=: Revealed empty tile with no adjacent bombs.
+- =.=: Unknown tile that can be revealed using the /Space/ key or flagged using the
+  /F/ key.
+- =F=: Flagged tile that can be un-flagged with the /F/ key.
+- =@=: Revealed tile, which contained a bomb. The player lost.
+- =<number>=: Revealed empty tile with *N* adjacent bombs.
+
+** Additional features
+
+Some macros can be defined or commented from the =defines.h= file to enable
+certain features at compile-time.
+
+#+begin_src C
+/*
+ * This line adds the "reveal surrounding" feature. With this feature, adjacent
+ * tiles will get revealed if the user is trying to reveal:
+ *   - An already revealed tile
+ *   - With adjacent bombs
+ *   - With all bombs flagged
+ * Comment this line if you don't want this feature.
+ */
+#define REVEAL_SURROUNDING
+#+end_src
+
+#+begin_src C
+/*
+ * If you compile the program with USE_COLOR and your terminal supports it, it
+ * will render the tiles with color.
+ */
+#define USE_COLOR
+#+end_src
+
+#+begin_src C
+/*
+ * If you compile the program with USE_MOUSE and your terminal supports it, it
+ * will make the tiles clickable.
+ */
+#define USE_MOUSE
+#+end_src
