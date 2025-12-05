@@ -433,7 +433,7 @@ static inline bool is_empty(vec2_t p) {
  * @details Used by reveal_tiles()
  * @return Value at the front (index 0) of the queue
  */
-static inline vec2_t queue_pop_front() {
+static inline vec2_t queue_pop_front(void) {
     vec2_t ret = queue[0];
 
     /* Shift. Note that `top` is not the last pushed value, but the next one */
